@@ -6,7 +6,8 @@ class UserModel {
   final String email;
   final String role;
   final String? supervisorId;
-  final DateTime createdAt;
+  final DateTime? createdAt;
+  final bool isActive;
 
   UserModel({
     required this.id,
@@ -14,7 +15,8 @@ class UserModel {
     required this.email,
     required this.role,
     this.supervisorId,
-    required this.createdAt,
+    this.createdAt,
+    this.isActive = true,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -25,7 +27,8 @@ class UserModel {
       email: data['email'] ?? '',
       role: data['role'] ?? '',
       supervisorId: data['supervisorId'],
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      isActive: data['isActive'] ?? true,
     );
   }
 
@@ -36,6 +39,7 @@ class UserModel {
       'role': role,
       'supervisorId': supervisorId,
       'createdAt': FieldValue.serverTimestamp(),
+      'isActive': isActive,
     };
   }
 
@@ -46,6 +50,7 @@ class UserModel {
     String? role,
     String? supervisorId,
     DateTime? createdAt,
+    bool? isActive,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -54,6 +59,7 @@ class UserModel {
       role: role ?? this.role,
       supervisorId: supervisorId ?? this.supervisorId,
       createdAt: createdAt ?? this.createdAt,
+      isActive: isActive ?? this.isActive,
     );
   }
 

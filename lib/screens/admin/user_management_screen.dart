@@ -7,7 +7,8 @@ import '../../constants/app_constants.dart';
 import '../../utils/utils.dart';
 
 class UserManagementScreen extends StatefulWidget {
-  const UserManagementScreen({super.key});
+  final int initialTabIndex;
+  const UserManagementScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<UserManagementScreen> createState() => _UserManagementScreenState();
@@ -20,7 +21,7 @@ class _UserManagementScreenState extends State<UserManagementScreen>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl = TabController(length: 2, vsync: this, initialIndex: widget.initialTabIndex);
   }
 
   @override
@@ -101,7 +102,7 @@ class _UserManagementScreenState extends State<UserManagementScreen>
                     ? null
                     : () async {
                         if (!formKey.currentState!.validate()) return;
-                        final ok = await admin.createUser(
+                        final successMessage = await admin.createUser(
                           name: nameCtrl.text.trim(),
                           email: emailCtrl.text.trim(),
                           password: passCtrl.text.trim(),
@@ -111,11 +112,9 @@ class _UserManagementScreenState extends State<UserManagementScreen>
                         Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(ok
-                                ? 'User created successfully'
-                                : (admin.error ?? 'Failed')),
+                            content: Text(successMessage ?? (admin.error ?? 'Failed')),
                             backgroundColor:
-                                ok ? AppColors.approved : AppColors.error,
+                                successMessage != null ? AppColors.approved : AppColors.error,
                           ),
                         );
                       },
@@ -175,6 +174,92 @@ class _UserList extends StatelessWidget {
 
   const _UserList({required this.users, required this.role});
 
+  void _showEditUserDialog(BuildContext context, UserModel user) {
+    final nameCtrl = TextEditingController(text: user.name);
+    String selectedRole = user.role;
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Edit User'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    initialValue: user.email,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    readOnly: true,
+                    enabled: false,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedRole,
+                    decoration: const InputDecoration(labelText: 'Role'),
+                    items: const [
+                      DropdownMenuItem(value: 'student', child: Text('Student')),
+                      DropdownMenuItem(
+                          value: 'supervisor', child: Text('Supervisor')),
+                    ],
+                    onChanged: (v) =>
+                        setDialogState(() => selectedRole = v ?? selectedRole),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(labelText: 'Full Name'),
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
+            Consumer<AdminProvider>(
+              builder: (_, admin, __) => ElevatedButton(
+                onPressed: admin.loading
+                    ? null
+                    : () async {
+                        if (!formKey.currentState!.validate()) return;
+                        final ok = await admin.updateUser(
+                          user.id,
+                          name: nameCtrl.text.trim(),
+                          role: selectedRole,
+                        );
+                        if (!context.mounted) return;
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(ok
+                                ? 'User updated successfully'
+                                : (admin.error ?? 'Failed')),
+                            backgroundColor:
+                                ok ? AppColors.approved : AppColors.error,
+                          ),
+                        );
+                      },
+                child: admin.loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Save'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (users.isEmpty) {
@@ -216,13 +301,15 @@ class _UserList extends StatelessWidget {
             ),
             trailing: PopupMenuButton<String>(
               onSelected: (v) async {
-                if (v == 'delete') {
+                if (v == 'edit') {
+                  _showEditUserDialog(context, user);
+                } else if (v == 'deactivate') {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: const Text('Delete User'),
+                      title: const Text('Deactivate User'),
                       content: Text(
-                          'Delete ${user.name}? This cannot be undone.'),
+                          'Deactivate ${user.name}? They will no longer have access.'),
                       actions: [
                         TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
@@ -231,23 +318,31 @@ class _UserList extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.error),
                           onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text('Delete'),
+                          child: const Text('Deactivate'),
                         ),
                       ],
                     ),
                   );
                   if (confirm == true && context.mounted) {
-                    await context.read<AdminProvider>().deleteUser(user.id);
+                    await context.read<AdminProvider>().deactivateUser(user.id);
                   }
                 }
               },
               itemBuilder: (_) => [
                 const PopupMenuItem(
-                  value: 'delete',
+                  value: 'edit',
                   child: Row(children: [
-                    Icon(Icons.delete, color: Colors.red, size: 18),
+                    Icon(Icons.edit, color: AppColors.primary, size: 18),
                     SizedBox(width: 8),
-                    Text('Delete', style: TextStyle(color: Colors.red)),
+                    Text('Edit', style: TextStyle(color: AppColors.primary)),
+                  ]),
+                ),
+                const PopupMenuItem(
+                  value: 'deactivate',
+                  child: Row(children: [
+                    Icon(Icons.person_off, color: Colors.red, size: 18),
+                    SizedBox(width: 8),
+                    Text('Deactivate', style: TextStyle(color: Colors.red)),
                   ]),
                 ),
               ],

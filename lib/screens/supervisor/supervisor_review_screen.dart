@@ -269,17 +269,24 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
 
   Future<void> _openFile(String url) async {
     try {
-      final uri = Uri.parse(url);
+      String finalUrl = url.trim();
+      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+        finalUrl = 'https://$finalUrl';
+      }
+      final uri = Uri.parse(finalUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not open file.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        // Fallback if canLaunchUrl fails but it might still be launchable
+        if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not open file.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
       }
     } catch (_) {
       if (!mounted) return;

@@ -58,11 +58,15 @@ class ProjectRepository {
     return _firestore
         .collection('projects')
         .where('studentId', isEqualTo: studentId)
-        .limit(1)
         .snapshots()
         .map((snap) {
       if (snap.docs.isEmpty) return null;
-      return ProjectModel.fromFirestore(snap.docs.first);
+      final projects = snap.docs
+          .map(ProjectModel.fromFirestore)
+          .where((p) => !p.isDeleted && !p.isArchived)
+          .toList();
+      if (projects.isEmpty) return null;
+      return projects.first;
     });
   }
 
@@ -71,10 +75,14 @@ class ProjectRepository {
     final snap = await _firestore
         .collection('projects')
         .where('studentId', isEqualTo: studentId)
-        .limit(1)
         .get();
     if (snap.docs.isEmpty) return null;
-    return ProjectModel.fromFirestore(snap.docs.first);
+    final projects = snap.docs
+        .map(ProjectModel.fromFirestore)
+        .where((p) => !p.isDeleted && !p.isArchived)
+        .toList();
+    if (projects.isEmpty) return null;
+    return projects.first;
   }
 
   Stream<List<ProjectModel>> getProjectsBySupervisorId(String supervisorId) {
@@ -82,7 +90,10 @@ class ProjectRepository {
         .collection('projects')
         .where('supervisorId', isEqualTo: supervisorId)
         .snapshots()
-        .map((snap) => snap.docs.map(ProjectModel.fromFirestore).toList());
+        .map((snap) => snap.docs
+            .map(ProjectModel.fromFirestore)
+            .where((p) => !p.isDeleted && !p.isArchived)
+            .toList());
   }
 
   Stream<List<ProjectModel>> getAllProjects() {

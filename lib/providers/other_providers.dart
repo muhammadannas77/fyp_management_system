@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/models.dart';
 import '../repositories/repositories.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // ─── AdminProvider ────────────────────────────────────────────────────────────
 class AdminProvider extends ChangeNotifier {
@@ -16,6 +17,7 @@ class AdminProvider extends ChangeNotifier {
   List<UserModel> _supervisors = [];
   List<UserModel> _allUsers = [];
   List<ProjectModel> _projects = [];
+  List<ProjectModel> _archivedProjects = [];
   bool _loading = false;
   String? _error;
   bool _isListening = false;
@@ -27,6 +29,7 @@ class AdminProvider extends ChangeNotifier {
   List<UserModel> get supervisors => _supervisors;
   List<UserModel> get allUsers => _allUsers;
   List<ProjectModel> get projects => _projects;
+  List<ProjectModel> get archivedProjects => _archivedProjects;
   bool get loading => _loading;
   String? get error => _error;
 
@@ -40,9 +43,15 @@ class AdminProvider extends ChangeNotifier {
 
     _usersSub = _userRepo.getAllUsers().listen(
       (users) {
-        _allUsers = users;
-        _students = users.where((u) => u.isStudent).toList();
-        _supervisors = users.where((u) => u.isSupervisor).toList();
+        _allUsers = users.where((u) => u.isActive).toList();
+        _allUsers.sort((a, b) {
+          if (a.createdAt == null && b.createdAt == null) return 0;
+          if (a.createdAt == null) return 1;
+          if (b.createdAt == null) return -1;
+          return b.createdAt!.compareTo(a.createdAt!);
+        });
+        _students = _allUsers.where((u) => u.isStudent).toList();
+        _supervisors = _allUsers.where((u) => u.isSupervisor).toList();
         notifyListeners();
       },
       onError: (_) {},
@@ -50,7 +59,8 @@ class AdminProvider extends ChangeNotifier {
 
     _projectsSub = _projectRepo.getAllProjects().listen(
       (projects) {
-        _projects = projects;
+        _projects = projects.where((p) => !p.isDeleted && !p.isArchived).toList();
+        _archivedProjects = projects.where((p) => !p.isDeleted && p.isArchived).toList();
         notifyListeners();
       },
       onError: (_) {},
@@ -65,9 +75,10 @@ class AdminProvider extends ChangeNotifier {
     _supervisors = [];
     _allUsers = [];
     _projects = [];
+    _archivedProjects = [];
   }
 
-  Future<bool> createUser({
+  Future<String?> createUser({
     required String name,
     required String email,
     required String password,
@@ -78,6 +89,27 @@ class AdminProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
+      final existingUser = await _userRepo.getUserByEmail(email);
+      if (existingUser != null) {
+        if (!existingUser.isActive) {
+          await _userRepo.updateUser(existingUser.id, {
+            'isActive': true,
+            'name': name,
+            'role': role,
+            'updatedAt': FieldValue.serverTimestamp(),
+            'reactivatedAt': FieldValue.serverTimestamp(),
+          });
+          _loading = false;
+          notifyListeners();
+          return 'User reactivated successfully';
+        } else {
+          _error = 'This user is already registered.';
+          _loading = false;
+          notifyListeners();
+          return null;
+        }
+      }
+
       await _authRepo.createUser(
         name: name,
         email: email,
@@ -87,17 +119,21 @@ class AdminProvider extends ChangeNotifier {
       );
       _loading = false;
       notifyListeners();
-      return true;
+      return 'User created successfully';
     } on FirebaseAuthException catch (e) {
-      _error = _friendlyAuthError(e.code);
+      if (e.code == 'email-already-in-use') {
+        _error = 'This user is already registered.';
+      } else {
+        _error = _friendlyAuthError(e.code);
+      }
       _loading = false;
       notifyListeners();
-      return false;
+      return null;
     } catch (e) {
       _error = 'Failed to create user. Please try again.';
       _loading = false;
       notifyListeners();
-      return false;
+      return null;
     }
   }
 
@@ -201,17 +237,121 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> deleteUser(String userId) async {
+  Future<bool> deactivateUser(String userId) async {
     _loading = true;
     _error = null;
     notifyListeners();
     try {
-      await _userRepo.deleteUser(userId);
+      await _userRepo.updateUser(userId, {
+        'isActive': false,
+        'deactivatedAt': FieldValue.serverTimestamp(),
+      });
       _loading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = 'Failed to delete user.';
+      _error = 'Failed to deactivate user.';
+      _loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateUser(String userId, {required String name, required String role}) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _userRepo.updateUser(userId, {
+        'name': name,
+        'role': role,
+      });
+      _loading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Failed to update user.';
+      _loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateProjectCore(String projectId, {required String title, required String studentId, required String supervisorId}) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _projectRepo.updateProject(projectId, {
+        'title': title,
+        'studentId': studentId,
+        'supervisorId': supervisorId,
+      });
+      _loading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Failed to update project.';
+      _loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> archiveProject(String projectId) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _projectRepo.updateProject(projectId, {
+        'isArchived': true,
+        'archivedAt': FieldValue.serverTimestamp(),
+      });
+      _loading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Failed to archive project.';
+      _loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> restoreProject(String projectId) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _projectRepo.updateProject(projectId, {
+        'isArchived': false,
+        'archivedAt': FieldValue.delete(),
+      });
+      _loading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Failed to restore project.';
+      _loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteProject(String projectId) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _projectRepo.updateProject(projectId, {
+        'isDeleted': true,
+        'deletedAt': FieldValue.serverTimestamp(),
+      });
+      _loading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Failed to delete project.';
       _loading = false;
       notifyListeners();
       return false;

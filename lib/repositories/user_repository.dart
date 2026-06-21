@@ -24,6 +24,18 @@ class UserRepository {
     return null;
   }
 
+  Future<UserModel?> getUserByEmail(String email) async {
+    final query = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+    if (query.docs.isNotEmpty) {
+      return UserModel.fromFirestore(query.docs.first);
+    }
+    return null;
+  }
+
   Future<void> updateUser(String id, Map<String, dynamic> data) async {
     await _firestore.collection('users').doc(id).update(data);
   }

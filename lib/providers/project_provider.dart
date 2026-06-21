@@ -42,6 +42,11 @@ class ProjectProvider extends ChangeNotifier {
           _listenToPhases(project.id);
         } else {
           _phases = [];
+          _phasesSub?.cancel();
+          _selectedFile = null;
+          _selectedScreenshots.clear();
+          _presentationFile = null;
+          _testCasesFile = null;
         }
         notifyListeners();
       },

@@ -220,6 +220,9 @@ class _ProjectCard extends StatelessWidget {
         return StreamBuilder<List<PhaseModel>>(
           stream: phaseRepo.getPhasesByProjectId(project.id),
           builder: (context, phaseSnap) {
+            final isStudentLoading = studentSnap.connectionState == ConnectionState.waiting;
+            final isPhaseLoading = phaseSnap.connectionState == ConnectionState.waiting;
+
             final student = studentSnap.data;
             final phases = phaseSnap.data ?? [];
             final currentPhase = phases.isNotEmpty
@@ -228,22 +231,35 @@ class _ProjectCard extends StatelessWidget {
                     orElse: () => phases.first,
                   )
                 : null;
-            final pendingReview =
-                phases.where((p) => p.isSubmitted).length;
+            final pendingReview = phases.where((p) => p.isSubmitted).length;
+
+            final studentName = isStudentLoading
+                ? 'Loading...'
+                : (student?.name ?? 'Unknown Student');
+
+            final phaseStatusLabel = isPhaseLoading
+                ? 'Loading...'
+                : (currentPhase != null ? StatusHelper.getLabel(currentPhase.status) : 'Unknown');
+
+            final phaseStatusColor = isPhaseLoading
+                ? Colors.grey
+                : (currentPhase != null ? StatusHelper.getColor(currentPhase.status) : Colors.grey);
 
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => SupervisorReviewScreen(
-                      project: project,
-                      student: student,
-                    ),
-                  ),
-                ),
+                onTap: isStudentLoading || isPhaseLoading
+                    ? null
+                    : () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SupervisorReviewScreen(
+                              project: project,
+                              student: student,
+                            ),
+                          ),
+                        ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -277,61 +293,61 @@ class _ProjectCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      if (student != null)
-                        InfoRow(
-                            icon: Icons.person,
-                            label: 'Student',
-                            value: student.name),
+                      InfoRow(
+                          icon: Icons.person,
+                          label: 'Student',
+                          value: studentName,
+                          valueColor: isStudentLoading ? AppColors.textSecondary : null),
                       InfoRow(
                           icon: Icons.layers,
                           label: 'Current Phase',
                           value: 'Phase ${project.currentPhase}',
                           valueColor: AppColors.primary),
-                      if (currentPhase != null) ...[
+                      InfoRow(
+                          icon: Icons.info_outline,
+                          label: 'Phase Status',
+                          value: phaseStatusLabel,
+                          valueColor: phaseStatusColor),
+                      if (!isPhaseLoading && currentPhase != null && currentPhase.submittedAt != null)
                         InfoRow(
-                            icon: Icons.info_outline,
-                            label: 'Phase Status',
-                            value: StatusHelper.getLabel(currentPhase.status),
-                            valueColor:
-                                StatusHelper.getColor(currentPhase.status)),
-                        if (currentPhase.submittedAt != null)
-                          InfoRow(
-                              icon: Icons.access_time,
-                              label: 'Last Submission',
-                              value: DateFormatter.format(
-                                  currentPhase.submittedAt)),
-                      ],
+                            icon: Icons.access_time,
+                            label: 'Last Submission',
+                            value: DateFormatter.format(
+                                currentPhase.submittedAt)),
                       const SizedBox(height: 8),
                       // Phase progress chips
-                      Wrap(
-                        spacing: 6,
-                        children: phases
-                            .map((p) => Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    color: StatusHelper.getColor(p.status)
-                                        .withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: StatusHelper.getColor(p.status),
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      '${p.phaseNo}',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color:
-                                            StatusHelper.getColor(p.status),
+                      if (!isPhaseLoading)
+                        Wrap(
+                          spacing: 6,
+                          children: phases
+                              .map((p) => Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: StatusHelper.getColor(p.status)
+                                          .withValues(alpha: 0.2),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: StatusHelper.getColor(p.status),
+                                        width: 1.5,
                                       ),
                                     ),
-                                  ),
-                                ))
-                            .toList(),
-                      ),
+                                    child: Center(
+                                      child: Text(
+                                        '${p.phaseNo}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              StatusHelper.getColor(p.status),
+                                        ),
+                                      ),
+                                    ),
+                                  ))
+                              .toList(),
+                        )
+                      else
+                        const SizedBox(height: 28), // Placeholder height for chips
                     ],
                   ),
                 ),

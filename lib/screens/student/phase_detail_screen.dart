@@ -100,14 +100,20 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
 
   Future<void> _openFile(String url) async {
     try {
-      final uri = Uri.parse(url);
+      String finalUrl = url.trim();
+      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+        finalUrl = 'https://$finalUrl';
+      }
+      final uri = Uri.parse(finalUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open file.')),
-        );
+        if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not open file.')),
+          );
+        }
       }
     } catch (_) {
       if (!mounted) return;

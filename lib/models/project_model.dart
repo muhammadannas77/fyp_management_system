@@ -8,6 +8,9 @@ class ProjectModel {
   final int currentPhase;
   final String status;
   final DateTime createdAt;
+  final bool isArchived;
+  final bool isDeleted;
+  final DateTime? archivedAt;
 
   ProjectModel({
     required this.id,
@@ -17,6 +20,9 @@ class ProjectModel {
     required this.currentPhase,
     required this.status,
     required this.createdAt,
+    this.isArchived = false,
+    this.isDeleted = false,
+    this.archivedAt,
   });
 
   factory ProjectModel.fromFirestore(DocumentSnapshot doc) {
@@ -29,6 +35,9 @@ class ProjectModel {
       currentPhase: data['currentPhase'] ?? 1,
       status: data['status'] ?? 'active',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isArchived: data['isArchived'] ?? false,
+      isDeleted: data['isDeleted'] ?? false,
+      archivedAt: (data['archivedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -40,6 +49,9 @@ class ProjectModel {
       'currentPhase': currentPhase,
       'status': status,
       'createdAt': FieldValue.serverTimestamp(),
+      'isArchived': isArchived,
+      'isDeleted': isDeleted,
+      if (archivedAt != null) 'archivedAt': Timestamp.fromDate(archivedAt!),
     };
   }
 
@@ -51,6 +63,9 @@ class ProjectModel {
     int? currentPhase,
     String? status,
     DateTime? createdAt,
+    bool? isArchived,
+    bool? isDeleted,
+    DateTime? archivedAt,
   }) {
     return ProjectModel(
       id: id ?? this.id,
@@ -60,6 +75,9 @@ class ProjectModel {
       currentPhase: currentPhase ?? this.currentPhase,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
+      isArchived: isArchived ?? this.isArchived,
+      isDeleted: isDeleted ?? this.isDeleted,
+      archivedAt: archivedAt ?? this.archivedAt,
     );
   }
 }

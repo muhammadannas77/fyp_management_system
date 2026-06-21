@@ -33,8 +33,14 @@ class AuthProvider extends ChangeNotifier {
     try {
       final userModel = await _authRepo.getUserById(firebaseUser.uid);
       if (userModel != null) {
-        _currentUser = userModel;
-        _status = AuthStatus.authenticated;
+        if (!userModel.isActive) {
+          await _authRepo.signOut();
+          _status = AuthStatus.unauthenticated;
+          _currentUser = null;
+        } else {
+          _currentUser = userModel;
+          _status = AuthStatus.authenticated;
+        }
       } else {
         // Auth user exists but no Firestore doc — treat as unauthenticated
         _status = AuthStatus.unauthenticated;
@@ -54,6 +60,14 @@ class AuthProvider extends ChangeNotifier {
     try {
       final user = await _authRepo.signIn(email, password);
       if (user != null) {
+        if (!user.isActive) {
+          await _authRepo.signOut();
+          _error = 'Your account is deactivated. Please contact administrator.';
+          _loading = false;
+          notifyListeners();
+          return false;
+        }
+
         _currentUser = user;
         _status = AuthStatus.authenticated;
         _loading = false;

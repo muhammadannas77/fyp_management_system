@@ -7,6 +7,7 @@ import '../shared/notifications_screen.dart';
 import '../shared/login_screen.dart';
 import 'user_management_screen.dart';
 import 'project_management_screen.dart';
+import '../student/project_history_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -38,6 +39,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+
+    final displayName = user.name.isNotEmpty ? user.name : 'System Administration';
+    final avatarInitial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'S';
 
     return Scaffold(
       appBar: AppBar(
@@ -103,7 +107,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       backgroundColor: AppColors.changesRequested,
                       radius: 26,
                       child: Text(
-                        user.name.isNotEmpty ? user.name[0].toUpperCase() : 'A',
+                        avatarInitial,
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -115,7 +119,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user.name,
+                          Text(displayName,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           Text(user.email,
@@ -150,7 +154,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 final width = constraints.maxWidth;
                 final crossAxisCount = width > 600 ? 4 : 2;
                 final itemWidth = (width - ((crossAxisCount - 1) * 12)) / crossAxisCount;
-                final aspectRatio = itemWidth / 130; // Base height of 130
+                final aspectRatio = itemWidth / 160; // Base height of 160
                 return GridView.count(
                   crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 12,
@@ -164,24 +168,40 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       value: '${admin.allUsers.length}',
                       icon: Icons.people,
                       color: AppColors.primary,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const UserManagementScreen()),
+                      ),
                     ),
                     StatsCard(
                       title: 'Students',
                       value: '${admin.totalStudents}',
                       icon: Icons.person,
                       color: AppColors.primaryLight,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const UserManagementScreen(initialTabIndex: 0)),
+                      ),
                     ),
                     StatsCard(
                       title: 'Supervisors',
                       value: '${admin.totalSupervisors}',
                       icon: Icons.supervisor_account,
                       color: AppColors.approved,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const UserManagementScreen(initialTabIndex: 1)),
+                      ),
                     ),
                     StatsCard(
                       title: 'Projects',
                       value: '${admin.totalProjects}',
                       icon: Icons.folder_open,
                       color: AppColors.pendingSubmission,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProjectManagementScreen()),
+                      ),
                     ),
                   ],
                 );
@@ -232,7 +252,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const ProjectManagementScreen()),
+                              builder: (_) => ProjectHistoryScreen(projectId: p.id)),
                         ),
                       ),
                     ),
