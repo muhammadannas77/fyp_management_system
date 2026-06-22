@@ -58,3 +58,8 @@ class AppDimensions {
   static const double borderRadius = 12.0;
   static const double cardElevation = 2.0;
 }
+
+class CloudinaryConfig {
+  static const cloudName = 'dlvhosdnx';
+  static const uploadPreset = 'ml_default';
+}

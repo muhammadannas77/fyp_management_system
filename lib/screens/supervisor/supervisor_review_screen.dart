@@ -714,29 +714,51 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                   ],
 
                   // Attached file
-                  if (phase.fileUrl != null) ...[
+                  if (phase.fileUrl != null || phase.fileName != null) ...[
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FileAttachmentRow(
-                            fileName: phase.fileName ?? 'Submitted file',
-                            fileUrl: phase.fileUrl,
+                    if (phase.fileUrl != null)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FileAttachmentRow(
+                              fileName: phase.fileName ?? 'Submitted file',
+                              fileUrl: phase.fileUrl,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          onPressed: () => widget.onOpenFile(phase.fileUrl!),
-                          icon: const Icon(Icons.open_in_new, size: 14),
-                          label: const Text('Open'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            textStyle: const TextStyle(fontSize: 12),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () => widget.onOpenFile(phase.fileUrl!),
+                            icon: const Icon(Icons.open_in_new, size: 14),
+                            label: const Text('Open'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              textStyle: const TextStyle(fontSize: 12),
+                            ),
                           ),
+                        ],
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, size: 20, color: AppColors.error),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${phase.fileName} (File not uploaded yet)',
+                                style: const TextStyle(color: AppColors.error, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                   // GitHub Link
                   if (phase.githubUrl != null && phase.githubUrl!.isNotEmpty) ...[
@@ -797,51 +819,95 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                       child: Text(phase.finalProjectLink!, style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline)),
                     ),
                   ],
-                  if (phase.presentationUrl != null) ...[
+                  if (phase.presentationUrl != null || phase.presentationName != null) ...[
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FileAttachmentRow(
-                            fileName: phase.presentationName ?? 'Presentation',
-                            fileUrl: phase.presentationUrl,
+                    if (phase.presentationUrl != null)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FileAttachmentRow(
+                              fileName: phase.presentationName ?? 'Presentation',
+                              fileUrl: phase.presentationUrl,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          onPressed: () => widget.onOpenFile(phase.presentationUrl!),
-                          icon: const Icon(Icons.open_in_new, size: 14),
-                          label: const Text('Open'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            textStyle: const TextStyle(fontSize: 12),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () => widget.onOpenFile(phase.presentationUrl!),
+                            icon: const Icon(Icons.open_in_new, size: 14),
+                            label: const Text('Open'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              textStyle: const TextStyle(fontSize: 12),
+                            ),
                           ),
+                        ],
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, size: 20, color: AppColors.error),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${phase.presentationName} (File not uploaded yet)',
+                                style: const TextStyle(color: AppColors.error, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
-                  if (phase.testCasesUrl != null) ...[
+                  if (phase.testCasesUrl != null || phase.testCasesName != null) ...[
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FileAttachmentRow(
-                            fileName: phase.testCasesName ?? 'Test Cases',
-                            fileUrl: phase.testCasesUrl,
+                    if (phase.testCasesUrl != null)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FileAttachmentRow(
+                              fileName: phase.testCasesName ?? 'Test Cases',
+                              fileUrl: phase.testCasesUrl,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          onPressed: () => widget.onOpenFile(phase.testCasesUrl!),
-                          icon: const Icon(Icons.open_in_new, size: 14),
-                          label: const Text('Open'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            textStyle: const TextStyle(fontSize: 12),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () => widget.onOpenFile(phase.testCasesUrl!),
+                            icon: const Icon(Icons.open_in_new, size: 14),
+                            label: const Text('Open'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              textStyle: const TextStyle(fontSize: 12),
+                            ),
                           ),
+                        ],
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, size: 20, color: AppColors.error),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${phase.testCasesName} (File not uploaded yet)',
+                                style: const TextStyle(color: AppColors.error, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
 
                   // Previous change request reason

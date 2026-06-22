@@ -160,7 +160,10 @@ class ProjectProvider extends ChangeNotifier {
         );
         fileName = _selectedFile!.name;
         if (fileUrl == null) {
-          _error = 'File upload failed. Submitting without file.';
+          _error = 'Main file upload failed. Please try again.';
+          _loading = false;
+          notifyListeners();
+          return false;
         }
       }
 
@@ -173,6 +176,11 @@ class ProjectProvider extends ChangeNotifier {
         );
         if (url != null) {
           finalScreenshots.add(url);
+        } else {
+          _error = 'Screenshot upload failed. Please try again.';
+          _loading = false;
+          notifyListeners();
+          return false;
         }
       }
 
@@ -185,6 +193,12 @@ class ProjectProvider extends ChangeNotifier {
           phaseNo: phaseNo,
         );
         presentationName = _presentationFile!.name;
+        if (presentationUrl == null) {
+          _error = 'Presentation upload failed. Please try again.';
+          _loading = false;
+          notifyListeners();
+          return false;
+        }
       }
 
       String? testCasesUrl;
@@ -196,6 +210,12 @@ class ProjectProvider extends ChangeNotifier {
           phaseNo: phaseNo,
         );
         testCasesName = _testCasesFile!.name;
+        if (testCasesUrl == null) {
+          _error = 'Test cases upload failed. Please try again.';
+          _loading = false;
+          notifyListeners();
+          return false;
+        }
       }
 
       await _phaseRepo.submitPhase(

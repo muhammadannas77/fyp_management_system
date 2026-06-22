@@ -299,7 +299,7 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
               const SizedBox(height: 8),
 
               // ── Existing Submitted File ─────────────────────────────────
-              if (phase.fileUrl != null)
+              if (phase.fileUrl != null || phase.fileName != null)
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -323,19 +323,41 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                           fileUrl: phase.fileUrl,
                         ),
                         const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _openFile(phase.fileUrl!),
-                            icon: const Icon(Icons.open_in_new, size: 16),
-                            label: const Text('Open File'),
+                        if (phase.fileUrl != null)
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _openFile(phase.fileUrl!),
+                              icon: const Icon(Icons.open_in_new, size: 16),
+                              label: const Text('Open File'),
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline, size: 20, color: AppColors.error),
+                                const SizedBox(width: 8),
+                                const Expanded(
+                                  child: Text(
+                                    'File not uploaded yet',
+                                    style: TextStyle(color: AppColors.error, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
                 ),
-              if (phase.fileUrl != null) const SizedBox(height: 8),
+              if (phase.fileUrl != null || phase.fileName != null) const SizedBox(height: 8),
 
               // ── Submitted Phase 4 Details ────────────────────────────────
               if (phase.phaseNo == 4 && (phase.githubUrl != null || (phase.screenshots != null && phase.screenshots!.isNotEmpty)))
@@ -435,22 +457,50 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                           ),
                           const SizedBox(height: 12),
                         ],
-                        if (phase.presentationUrl != null) ...[
+                        if (phase.presentationUrl != null || phase.presentationName != null) ...[
                           const Text('Presentation:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                           const SizedBox(height: 4),
                           FileAttachmentRow(
                             fileName: phase.presentationName ?? 'Presentation',
                             fileUrl: phase.presentationUrl,
                           ),
+                          if (phase.presentationUrl != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: OutlinedButton.icon(
+                                onPressed: () => _openFile(phase.presentationUrl!),
+                                icon: const Icon(Icons.open_in_new, size: 14),
+                                label: const Text('Open'),
+                              ),
+                            )
+                          else
+                            const Padding(
+                              padding: EdgeInsets.only(top: 8),
+                              child: Text('(File not uploaded yet)', style: TextStyle(color: AppColors.error, fontSize: 12)),
+                            ),
                           const SizedBox(height: 12),
                         ],
-                        if (phase.testCasesUrl != null) ...[
+                        if (phase.testCasesUrl != null || phase.testCasesName != null) ...[
                           const Text('Test Cases:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                           const SizedBox(height: 4),
                           FileAttachmentRow(
                             fileName: phase.testCasesName ?? 'Test Cases',
                             fileUrl: phase.testCasesUrl,
                           ),
+                          if (phase.testCasesUrl != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: OutlinedButton.icon(
+                                onPressed: () => _openFile(phase.testCasesUrl!),
+                                icon: const Icon(Icons.open_in_new, size: 14),
+                                label: const Text('Open'),
+                              ),
+                            )
+                          else
+                            const Padding(
+                              padding: EdgeInsets.only(top: 8),
+                              child: Text('(File not uploaded yet)', style: TextStyle(color: AppColors.error, fontSize: 12)),
+                            ),
                           const SizedBox(height: 12),
                         ],
                       ],
