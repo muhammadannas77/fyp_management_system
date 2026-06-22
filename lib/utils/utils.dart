@@ -1,18 +1,41 @@
+/// ------------------------------------------------------------------
+/// File: utils.dart
+/// Role: Utility Helper
+/// 
+/// Description:
+/// Contains helper functions, date formatters, and small logic snippets that are shared across various parts of the application.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:intl/intl.dart';
 import '../constants/app_constants.dart';
 import 'package:flutter/material.dart';
 
 class DateFormatter {
+  /// -----------------------------------------
+  /// Method: format
+  /// Purpose: Executes logic for format and handles state or UI updates.
+  /// -----------------------------------------
   static String format(DateTime? date) {
     if (date == null) return 'N/A';
     return DateFormat('d MMM yyyy, h:mm a').format(date);
   }
 
+  /// -----------------------------------------
+  /// Method: formatDate
+  /// Purpose: Executes logic for formatDate and handles state or UI updates.
+  /// -----------------------------------------
   static String formatDate(DateTime? date) {
     if (date == null) return 'N/A';
     return DateFormat('d MMM yyyy').format(date);
   }
 
+  /// -----------------------------------------
+  /// Method: formatDuration
+  /// Purpose: Executes logic for formatDuration and handles state or UI updates.
+  /// -----------------------------------------
   static String formatDuration(Duration duration) {
     if (duration.inDays > 0) {
       return '${duration.inDays}d ${duration.inHours % 24}h';
@@ -87,6 +110,10 @@ class PhaseData {
 }
 
 class StatusHelper {
+  /// -----------------------------------------
+  /// Method: getColor
+  /// Purpose: Executes logic for getColor and handles state or UI updates.
+  /// -----------------------------------------
   static Color getColor(String status) {
     switch (status) {
       case 'locked': return AppColors.locked;
@@ -98,6 +125,10 @@ class StatusHelper {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: getLabel
+  /// Purpose: Executes logic for getLabel and handles state or UI updates.
+  /// -----------------------------------------
   static String getLabel(String status) {
     switch (status) {
       case 'locked': return 'Locked';
@@ -109,6 +140,10 @@ class StatusHelper {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: getIcon
+  /// Purpose: Executes logic for getIcon and handles state or UI updates.
+  /// -----------------------------------------
   static IconData getIcon(String status) {
     switch (status) {
       case 'locked': return Icons.lock;

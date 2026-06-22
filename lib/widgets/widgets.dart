@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: widgets.dart
+/// Role: Reusable UI Component
+/// 
+/// Description:
+/// A modular, reusable Flutter widget designed to prevent code duplication across multiple screens.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../models/models.dart';
@@ -60,6 +71,10 @@ class PhaseProgressCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isCurrent
+            /// -----------------------------------------
+            /// Method: BorderSide
+            /// Purpose: Executes logic for BorderSide and handles state or UI updates.
+            /// -----------------------------------------
             ? const BorderSide(color: AppColors.primary, width: 2)
             : BorderSide.none,
       ),
@@ -79,6 +94,10 @@ class PhaseProgressCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: phase.isLocked
+                      /// -----------------------------------------
+                      /// Method: Icon
+                      /// Purpose: Executes logic for Icon and handles state or UI updates.
+                      /// -----------------------------------------
                       ? Icon(Icons.lock, color: color, size: 20)
                       : Text(
                           '${phase.phaseNo}',
@@ -275,6 +294,10 @@ class AuditTrailTile extends StatelessWidget {
 
   const AuditTrailTile({super.key, required this.audit});
 
+  /// -----------------------------------------
+  /// Method: _getIcon
+  /// Purpose: Executes logic for _getIcon and handles state or UI updates.
+  /// -----------------------------------------
   IconData _getIcon() {
     switch (audit.action) {
       case 'phase_submitted':
@@ -296,6 +319,10 @@ class AuditTrailTile extends StatelessWidget {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: _getColor
+  /// Purpose: Executes logic for _getColor and handles state or UI updates.
+  /// -----------------------------------------
   Color _getColor() {
     switch (audit.action) {
       case 'phase_approved':
@@ -493,6 +520,10 @@ class NotificationTile extends StatelessWidget {
   const NotificationTile(
       {super.key, required this.notification, required this.onTap});
 
+  /// -----------------------------------------
+  /// Method: _getIcon
+  /// Purpose: Executes logic for _getIcon and handles state or UI updates.
+  /// -----------------------------------------
   IconData _getIcon() {
     switch (notification.type) {
       case 'phase_approved':
@@ -511,6 +542,10 @@ class NotificationTile extends StatelessWidget {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: _getColor
+  /// Purpose: Executes logic for _getColor and handles state or UI updates.
+  /// -----------------------------------------
   Color _getColor() {
     switch (notification.type) {
       case 'phase_approved':

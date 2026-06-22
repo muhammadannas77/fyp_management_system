@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: auth_repository.dart
+/// Role: Database Access Layer (Repository)
+/// 
+/// Description:
+/// Abstracts all direct interactions with Firebase Firestore. Handles CRUD (Create, Read, Update, Delete) operations and provides continuous data streams to the Providers.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +21,10 @@ class AuthRepository {
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
+  /// -----------------------------------------
+  /// Method: signIn
+  /// Purpose: Executes logic for signIn and handles state or UI updates.
+  /// -----------------------------------------
   Future<UserModel?> signIn(String email, String password) async {
     final credential = await _auth.signInWithEmailAndPassword(
       email: email,
@@ -21,10 +36,18 @@ class AuthRepository {
     return null;
   }
 
+  /// -----------------------------------------
+  /// Method: signOut
+  /// Purpose: Executes logic for signOut and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
+  /// -----------------------------------------
+  /// Method: getUserById
+  /// Purpose: Executes logic for getUserById and handles state or UI updates.
+  /// -----------------------------------------
   Future<UserModel?> getUserById(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (doc.exists) return UserModel.fromFirestore(doc);

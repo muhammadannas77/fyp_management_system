@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: app_theme.dart
+/// Role: Global Constants & Theming
+/// 
+/// Description:
+/// Stores immutable configuration variables, API keys, color palettes, and global typography styles to ensure design consistency.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'app_constants.dart';
 

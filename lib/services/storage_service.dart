@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: storage_service.dart
+/// Role: External Service Integration
+/// 
+/// Description:
+/// Manages integrations with third-party APIs and device-level services, such as Cloudinary for file uploads or Firebase Cloud Messaging for push notifications.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
@@ -82,6 +93,10 @@ class StorageService {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: deleteFile
+  /// Purpose: Executes logic for deleteFile and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> deleteFile(String url) async {
     // Cloudinary unsigned upload generally doesn't allow unsigned delete without API secret or token
     // Assuming delete functionality is not heavily used or needed for the requested scope.

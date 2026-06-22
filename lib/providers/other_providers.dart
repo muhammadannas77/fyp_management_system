@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: other_providers.dart
+/// Role: State Management (ViewModel)
+/// 
+/// Description:
+/// Handles business logic and state management. Listens to Repository data streams and updates the UI (Screens) using the ChangeNotifier pattern. Prevents the UI from accessing the database directly.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -37,6 +48,10 @@ class AdminProvider extends ChangeNotifier {
   int get totalSupervisors => _supervisors.length;
   int get totalProjects => _projects.length;
 
+  /// -----------------------------------------
+  /// Method: startListening
+  /// Purpose: Executes logic for startListening and handles state or UI updates.
+  /// -----------------------------------------
   void startListening() {
     if (_isListening) return; // prevent duplicate subscriptions
     _isListening = true;
@@ -67,6 +82,10 @@ class AdminProvider extends ChangeNotifier {
     );
   }
 
+  /// -----------------------------------------
+  /// Method: stopListening
+  /// Purpose: Executes logic for stopListening and handles state or UI updates.
+  /// -----------------------------------------
   void stopListening() {
     _usersSub?.cancel();
     _projectsSub?.cancel();
@@ -137,6 +156,10 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: _friendlyAuthError
+  /// Purpose: Executes logic for _friendlyAuthError and handles state or UI updates.
+  /// -----------------------------------------
   String _friendlyAuthError(String code) {
     switch (code) {
       case 'email-already-in-use':
@@ -237,6 +260,10 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: deactivateUser
+  /// Purpose: Executes logic for deactivateUser and handles state or UI updates.
+  /// -----------------------------------------
   Future<bool> deactivateUser(String userId) async {
     _loading = true;
     _error = null;
@@ -257,6 +284,10 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: updateUser
+  /// Purpose: Executes logic for updateUser and handles state or UI updates.
+  /// -----------------------------------------
   Future<bool> updateUser(String userId, {required String name, required String role}) async {
     _loading = true;
     _error = null;
@@ -277,6 +308,10 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: updateProjectCore
+  /// Purpose: Executes logic for updateProjectCore and handles state or UI updates.
+  /// -----------------------------------------
   Future<bool> updateProjectCore(String projectId, {required String title, required String studentId, required String supervisorId}) async {
     _loading = true;
     _error = null;
@@ -298,6 +333,10 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: archiveProject
+  /// Purpose: Executes logic for archiveProject and handles state or UI updates.
+  /// -----------------------------------------
   Future<bool> archiveProject(String projectId) async {
     _loading = true;
     _error = null;
@@ -318,6 +357,10 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: restoreProject
+  /// Purpose: Executes logic for restoreProject and handles state or UI updates.
+  /// -----------------------------------------
   Future<bool> restoreProject(String projectId) async {
     _loading = true;
     _error = null;
@@ -338,6 +381,10 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: deleteProject
+  /// Purpose: Executes logic for deleteProject and handles state or UI updates.
+  /// -----------------------------------------
   Future<bool> deleteProject(String projectId) async {
     _loading = true;
     _error = null;
@@ -358,6 +405,10 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: clearError
+  /// Purpose: Executes logic for clearError and handles state or UI updates.
+  /// -----------------------------------------
   void clearError() {
     _error = null;
     notifyListeners();
@@ -383,6 +434,10 @@ class NotificationProvider extends ChangeNotifier {
   List<NotificationModel> get notifications => _notifications;
   int get unreadCount => _unreadCount;
 
+  /// -----------------------------------------
+  /// Method: startListening
+  /// Purpose: Executes logic for startListening and handles state or UI updates.
+  /// -----------------------------------------
   void startListening(String userId) {
     // Don't restart if already listening to same user
     if (_currentUserId == userId && _sub != null) return;
@@ -399,6 +454,10 @@ class NotificationProvider extends ChangeNotifier {
     );
   }
 
+  /// -----------------------------------------
+  /// Method: stopListening
+  /// Purpose: Executes logic for stopListening and handles state or UI updates.
+  /// -----------------------------------------
   void stopListening() {
     _sub?.cancel();
     _sub = null;
@@ -408,6 +467,10 @@ class NotificationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// -----------------------------------------
+  /// Method: markAsRead
+  /// Purpose: Executes logic for markAsRead and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> markAsRead(String notificationId) async {
     try {
       final index = _notifications.indexWhere((n) => n.id == notificationId);
@@ -429,6 +492,10 @@ class NotificationProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  /// -----------------------------------------
+  /// Method: markAllAsRead
+  /// Purpose: Executes logic for markAllAsRead and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> markAllAsRead(String userId) async {
     try {
       _notifications = _notifications.map((n) {

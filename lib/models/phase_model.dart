@@ -1,5 +1,29 @@
+/// ------------------------------------------------------------------
+/// File: phase_model.dart
+/// Role: Data Model
+/// 
+/// Description:
+/// Defines the data structure and schema for Firestore database synchronization. Converts raw JSON/Map NoSQL data into strongly-typed Dart objects for use throughout the application.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// ------------------------------------------------------------------
+/// PhaseModel (Data Structure)
+/// ------------------------------------------------------------------
+/// Represents a single developmental phase of a student's final year project.
+/// 
+/// Data Representation features:
+/// 1. Lifecycle Tracking: Stores all critical timestamps (`submittedAt`, `approvedAt`, `reviewedAt`) 
+///    to measure student progress and supervisor response times.
+/// 2. Extensible Attachments: Explicitly handles diverse attachment types like `githubUrl`, 
+///    `screenshots`, `demoVideoUrl`, and `presentationUrl` to support the unique requirements of Phase 4 and 5.
+/// 3. Serialization: Contains robust `fromFirestore` and `toMap` methods to seamlessly map 
+///    raw NoSQL documents into typed Dart objects.
+/// ------------------------------------------------------------------
 class PhaseModel {
   final String id;
   final String projectId;

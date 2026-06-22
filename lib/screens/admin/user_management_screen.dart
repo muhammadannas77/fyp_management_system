@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: user_management_screen.dart
+/// Role: User Interface (View)
+/// 
+/// Description:
+/// Renders the visual elements of the application. Listens to Providers for state changes to display data dynamically. Contains purely presentation logic without direct database manipulation.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
@@ -30,6 +41,10 @@ class _UserManagementScreenState extends State<UserManagementScreen>
     super.dispose();
   }
 
+  /// -----------------------------------------
+  /// Method: _showAddUserDialog
+  /// Purpose: Executes logic for _showAddUserDialog and handles state or UI updates.
+  /// -----------------------------------------
   void _showAddUserDialog(BuildContext context, String defaultRole) {
     final nameCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
@@ -174,6 +189,10 @@ class _UserList extends StatelessWidget {
 
   const _UserList({required this.users, required this.role});
 
+  /// -----------------------------------------
+  /// Method: _showEditUserDialog
+  /// Purpose: Executes logic for _showEditUserDialog and handles state or UI updates.
+  /// -----------------------------------------
   void _showEditUserDialog(BuildContext context, UserModel user) {
     final nameCtrl = TextEditingController(text: user.name);
     String selectedRole = user.role;

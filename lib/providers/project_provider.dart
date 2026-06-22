@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: project_provider.dart
+/// Role: State Management (ViewModel)
+/// 
+/// Description:
+/// Handles business logic and state management. Listens to Repository data streams and updates the UI (Screens) using the ChangeNotifier pattern. Prevents the UI from accessing the database directly.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -5,6 +16,19 @@ import '../models/models.dart';
 import '../repositories/repositories.dart';
 import '../services/storage_service.dart';
 
+/// ------------------------------------------------------------------
+/// ProjectProvider (ViewModel / Controller)
+/// ------------------------------------------------------------------
+/// This class acts as the core "brain" for the Student and Supervisor dashboards.
+/// It uses the `ChangeNotifier` to update the UI whenever data changes.
+/// 
+/// Key Responsibilities:
+/// 1. Listening to real-time project and phase data from Firestore.
+/// 2. Managing the UI state (loading indicators, error messages).
+/// 3. Handling file selections and coordinating Cloudinary uploads.
+/// 4. Orchestrating the complex submission and approval workflows, 
+///    ensuring that Notifications and Audit Trails are generated automatically.
+/// ------------------------------------------------------------------
 class ProjectProvider extends ChangeNotifier {
   final ProjectRepository _projectRepo = ProjectRepository();
   final PhaseRepository _phaseRepo = PhaseRepository();
@@ -33,6 +57,10 @@ class ProjectProvider extends ChangeNotifier {
   PlatformFile? get presentationFile => _presentationFile;
   PlatformFile? get testCasesFile => _testCasesFile;
 
+  /// -----------------------------------------
+  /// Method: listenToStudentProject
+  /// Purpose: Executes logic for listenToStudentProject and handles state or UI updates.
+  /// -----------------------------------------
   void listenToStudentProject(String studentId) {
     _projectSub?.cancel();
     _projectSub = _projectRepo.getProjectByStudentId(studentId).listen(
@@ -54,6 +82,10 @@ class ProjectProvider extends ChangeNotifier {
     );
   }
 
+  /// -----------------------------------------
+  /// Method: _listenToPhases
+  /// Purpose: Executes logic for _listenToPhases and handles state or UI updates.
+  /// -----------------------------------------
   void _listenToPhases(String projectId) {
     _phasesSub?.cancel();
     _phasesSub = _phaseRepo.getPhasesByProjectId(projectId).listen(
@@ -65,6 +97,10 @@ class ProjectProvider extends ChangeNotifier {
     );
   }
 
+  /// -----------------------------------------
+  /// Method: stopListening
+  /// Purpose: Executes logic for stopListening and handles state or UI updates.
+  /// -----------------------------------------
   void stopListening() {
     _projectSub?.cancel();
     _phasesSub?.cancel();
@@ -76,6 +112,10 @@ class ProjectProvider extends ChangeNotifier {
     _testCasesFile = null;
   }
 
+  /// -----------------------------------------
+  /// Method: pickFile
+  /// Purpose: Executes logic for pickFile and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> pickFile() async {
     final file = await _storageService.pickFile();
     if (file != null) {
@@ -84,11 +124,19 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: clearSelectedFile
+  /// Purpose: Executes logic for clearSelectedFile and handles state or UI updates.
+  /// -----------------------------------------
   void clearSelectedFile() {
     _selectedFile = null;
     notifyListeners();
   }
 
+  /// -----------------------------------------
+  /// Method: pickScreenshots
+  /// Purpose: Executes logic for pickScreenshots and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> pickScreenshots() async {
     final files = await _storageService.pickImages();
     if (files.isNotEmpty) {
@@ -97,6 +145,10 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: removeScreenshot
+  /// Purpose: Executes logic for removeScreenshot and handles state or UI updates.
+  /// -----------------------------------------
   void removeScreenshot(int index) {
     if (index >= 0 && index < _selectedScreenshots.length) {
       _selectedScreenshots.removeAt(index);
@@ -104,6 +156,10 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: pickPresentationFile
+  /// Purpose: Executes logic for pickPresentationFile and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> pickPresentationFile() async {
     final file = await _storageService.pickFile();
     if (file != null) {
@@ -112,11 +168,19 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: clearPresentationFile
+  /// Purpose: Executes logic for clearPresentationFile and handles state or UI updates.
+  /// -----------------------------------------
   void clearPresentationFile() {
     _presentationFile = null;
     notifyListeners();
   }
 
+  /// -----------------------------------------
+  /// Method: pickTestCasesFile
+  /// Purpose: Executes logic for pickTestCasesFile and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> pickTestCasesFile() async {
     final file = await _storageService.pickFile();
     if (file != null) {
@@ -125,6 +189,10 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: clearTestCasesFile
+  /// Purpose: Executes logic for clearTestCasesFile and handles state or UI updates.
+  /// -----------------------------------------
   void clearTestCasesFile() {
     _testCasesFile = null;
     notifyListeners();
@@ -393,6 +461,10 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: clearError
+  /// Purpose: Executes logic for clearError and handles state or UI updates.
+  /// -----------------------------------------
   void clearError() {
     _error = null;
     notifyListeners();

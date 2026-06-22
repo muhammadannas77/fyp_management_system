@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: app.dart
+/// Role: Core Architecture File
+/// 
+/// Description:
+/// Serves as an integral part of the FYP Management System architecture.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'constants/app_theme.dart';

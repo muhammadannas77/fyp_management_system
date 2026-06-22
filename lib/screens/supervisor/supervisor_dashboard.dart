@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: supervisor_dashboard.dart
+/// Role: User Interface (View)
+/// 
+/// Description:
+/// Renders the visual elements of the application. Listens to Providers for state changes to display data dynamically. Contains purely presentation logic without direct database manipulation.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
@@ -146,6 +157,10 @@ class _SupervisorDashboardState extends State<SupervisorDashboard> {
     );
   }
 
+  /// -----------------------------------------
+  /// Method: _buildSupervisorHeader
+  /// Purpose: Executes logic for _buildSupervisorHeader and handles state or UI updates.
+  /// -----------------------------------------
   Widget _buildSupervisorHeader(UserModel user) {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -222,9 +237,19 @@ class _ProjectCard extends StatelessWidget {
           builder: (context, phaseSnap) {
             final isStudentLoading = studentSnap.connectionState == ConnectionState.waiting;
             final isPhaseLoading = phaseSnap.connectionState == ConnectionState.waiting;
+            final phases = phaseSnap.data ?? [];
+
+            if (isStudentLoading || isPhaseLoading || phases.isEmpty) {
+              return const Card(
+                margin: EdgeInsets.only(bottom: 12),
+                child: SizedBox(
+                  height: 160,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              );
+            }
 
             final student = studentSnap.data;
-            final phases = phaseSnap.data ?? [];
             final currentPhase = phases.isNotEmpty
                 ? phases.firstWhere(
                     (p) => p.phaseNo == project.currentPhase,
@@ -233,25 +258,17 @@ class _ProjectCard extends StatelessWidget {
                 : null;
             final pendingReview = phases.where((p) => p.isSubmitted).length;
 
-            final studentName = isStudentLoading
-                ? 'Loading...'
-                : (student?.name ?? 'Unknown Student');
+            final studentName = student?.name ?? 'Unknown Student';
 
-            final phaseStatusLabel = isPhaseLoading
-                ? 'Loading...'
-                : (currentPhase != null ? StatusHelper.getLabel(currentPhase.status) : 'Unknown');
+            final phaseStatusLabel = currentPhase != null ? StatusHelper.getLabel(currentPhase.status) : 'Unknown';
 
-            final phaseStatusColor = isPhaseLoading
-                ? Colors.grey
-                : (currentPhase != null ? StatusHelper.getColor(currentPhase.status) : Colors.grey);
+            final phaseStatusColor = currentPhase != null ? StatusHelper.getColor(currentPhase.status) : Colors.grey;
 
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: isStudentLoading || isPhaseLoading
-                    ? null
-                    : () => Navigator.push(
+                onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => SupervisorReviewScreen(
@@ -296,8 +313,7 @@ class _ProjectCard extends StatelessWidget {
                       InfoRow(
                           icon: Icons.person,
                           label: 'Student',
-                          value: studentName,
-                          valueColor: isStudentLoading ? AppColors.textSecondary : null),
+                          value: studentName),
                       InfoRow(
                           icon: Icons.layers,
                           label: 'Current Phase',
@@ -308,7 +324,7 @@ class _ProjectCard extends StatelessWidget {
                           label: 'Phase Status',
                           value: phaseStatusLabel,
                           valueColor: phaseStatusColor),
-                      if (!isPhaseLoading && currentPhase != null && currentPhase.submittedAt != null)
+                      if (currentPhase != null && currentPhase.submittedAt != null)
                         InfoRow(
                             icon: Icons.access_time,
                             label: 'Last Submission',
@@ -316,10 +332,9 @@ class _ProjectCard extends StatelessWidget {
                                 currentPhase.submittedAt)),
                       const SizedBox(height: 8),
                       // Phase progress chips
-                      if (!isPhaseLoading)
-                        Wrap(
-                          spacing: 6,
-                          children: phases
+                      Wrap(
+                        spacing: 6,
+                        children: phases
                               .map((p) => Container(
                                     width: 28,
                                     height: 28,
@@ -345,9 +360,7 @@ class _ProjectCard extends StatelessWidget {
                                     ),
                                   ))
                               .toList(),
-                        )
-                      else
-                        const SizedBox(height: 28), // Placeholder height for chips
+                      ),
                     ],
                   ),
                 ),

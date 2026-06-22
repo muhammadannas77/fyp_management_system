@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: app_router.dart
+/// Role: Core Architecture File
+/// 
+/// Description:
+/// Serves as an integral part of the FYP Management System architecture.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import '../screens/shared/splash_screen.dart';
 import '../screens/shared/login_screen.dart';
@@ -7,6 +18,10 @@ import '../screens/supervisor/supervisor_dashboard.dart';
 import '../screens/admin/admin_dashboard.dart';
 
 class AppRouter {
+  /// -----------------------------------------
+  /// Method: generateRoute
+  /// Purpose: Executes logic for generateRoute and handles state or UI updates.
+  /// -----------------------------------------
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':

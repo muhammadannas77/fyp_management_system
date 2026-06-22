@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: fcm_service.dart
+/// Role: External Service Integration
+/// 
+/// Description:
+/// Manages integrations with third-party APIs and device-level services, such as Cloudinary for file uploads or Firebase Cloud Messaging for push notifications.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -10,6 +21,10 @@ class FCMService {
   static const _channelId = 'fyp_channel';
   static const _channelName = 'FYP Notifications';
 
+  /// -----------------------------------------
+  /// Method: initialize
+  /// Purpose: Executes logic for initialize and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> initialize() async {
     // Request permission
     await _messaging.requestPermission(
@@ -57,6 +72,10 @@ class FCMService {
     print('[FCM] Token: $token');
   }
 
+  /// -----------------------------------------
+  /// Method: _handleForeground
+  /// Purpose: Executes logic for _handleForeground and handles state or UI updates.
+  /// -----------------------------------------
   void _handleForeground(RemoteMessage message) {
     if (kIsWeb) return;
     final notification = message.notification;
@@ -83,6 +102,10 @@ class FCMService {
     );
   }
 
+  /// -----------------------------------------
+  /// Method: _handleOpened
+  /// Purpose: Executes logic for _handleOpened and handles state or UI updates.
+  /// -----------------------------------------
   void _handleOpened(RemoteMessage message) {
     // Could navigate to specific screen based on message.data
     // e.g. message.data['projectId'], message.data['phaseNo']

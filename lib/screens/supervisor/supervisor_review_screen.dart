@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: supervisor_review_screen.dart
+/// Role: User Interface (View)
+/// 
+/// Description:
+/// Renders the visual elements of the application. Listens to Providers for state changes to display data dynamically. Contains purely presentation logic without direct database manipulation.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +21,21 @@ import '../../utils/utils.dart';
 import '../shared/comment_thread_screen.dart';
 import '../student/project_history_screen.dart';
 
+/// ------------------------------------------------------------------
+/// SupervisorReviewScreen (Evaluation Workspace)
+/// ------------------------------------------------------------------
+/// This screen acts as the Supervisor's control center for a specific student's project.
+/// 
+/// Functionality features:
+/// 1. Unified Timeline View: Displays all 5 phases in a scrollable list, highlighting 
+///    the current active phase and providing historical context of past phases.
+/// 2. Evaluation Mechanics: Supervisors can accept or reject a phase. 
+///    - Approving triggers the `ProjectProvider` to unlock the next phase.
+///    - Requesting changes requires a mandatory comment explaining the rejection.
+/// 3. Resource Fetching: Securely downloads and opens files (Cloudinary URLs) via the OS browser.
+/// 4. Direct Communication: Embeds a comment thread specific to each phase, keeping 
+///    all project discussions tightly coupled to their relevant deliverables.
+/// ------------------------------------------------------------------
 class SupervisorReviewScreen extends StatefulWidget {
   final ProjectModel project;
   final UserModel? student;
@@ -31,6 +57,10 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
 
   static const int _totalPhases = 5;
 
+  /// -----------------------------------------
+  /// Method: _approvePhase
+  /// Purpose: Executes logic for _approvePhase and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> _approvePhase(PhaseModel phase) async {
     final supervisor = context.read<AuthProvider>().currentUser;
     if (supervisor == null) return;
@@ -133,6 +163,10 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: _requestChanges
+  /// Purpose: Executes logic for _requestChanges and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> _requestChanges(PhaseModel phase) async {
     final reasonCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -267,6 +301,10 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: _openFile
+  /// Purpose: Executes logic for _openFile and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> _openFile(String url) async {
     try {
       String finalUrl = url.trim();
@@ -549,12 +587,15 @@ class _PhaseReviewCard extends StatefulWidget {
 
 class _PhaseReviewCardState extends State<_PhaseReviewCard> {
   bool _expanded = false;
+  late Stream<List<AuditTrailModel>> _auditStream;
 
   @override
   void initState() {
     super.initState();
     // Auto-expand submitted phases
     _expanded = widget.phase.isSubmitted || widget.phase.isChangesRequested;
+    _auditStream = AuditTrailRepository().getAuditTrailByPhase(
+        widget.project.id, widget.phase.phaseNo);
   }
 
   @override
@@ -1007,9 +1048,20 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                   ),
                   const SizedBox(height: 8),
                   StreamBuilder<List<AuditTrailModel>>(
-                    stream: AuditTrailRepository().getAuditTrailByPhase(
-                        widget.project.id, phase.phaseNo),
+                    stream: _auditStream,
                     builder: (context, snap) {
+                      if (snap.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
                       final audits = snap.data ?? [];
                       if (audits.isEmpty) {
                         return const Text(

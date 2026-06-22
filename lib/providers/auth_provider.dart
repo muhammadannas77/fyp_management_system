@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: auth_provider.dart
+/// Role: State Management (ViewModel)
+/// 
+/// Description:
+/// Handles business logic and state management. Listens to Repository data streams and updates the UI (Screens) using the ChangeNotifier pattern. Prevents the UI from accessing the database directly.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/models.dart';
@@ -18,10 +29,18 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get loading => _loading;
 
+  /// -----------------------------------------
+  /// Method: AuthProvider
+  /// Purpose: Executes logic for AuthProvider and handles state or UI updates.
+  /// -----------------------------------------
   AuthProvider() {
     _authRepo.authStateChanges.listen(_onAuthStateChanged);
   }
 
+  /// -----------------------------------------
+  /// Method: _onAuthStateChanged
+  /// Purpose: Executes logic for _onAuthStateChanged and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
     if (firebaseUser == null) {
       _status = AuthStatus.unauthenticated;
@@ -53,6 +72,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// -----------------------------------------
+  /// Method: signIn
+  /// Purpose: Executes logic for signIn and handles state or UI updates.
+  /// -----------------------------------------
   Future<bool> signIn(String email, String password) async {
     _loading = true;
     _error = null;
@@ -103,6 +126,10 @@ class AuthProvider extends ChangeNotifier {
     return false;
   }
 
+  /// -----------------------------------------
+  /// Method: signOut
+  /// Purpose: Executes logic for signOut and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> signOut() async {
     await _authRepo.signOut();
     _currentUser = null;
@@ -110,6 +137,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// -----------------------------------------
+  /// Method: refreshUser
+  /// Purpose: Executes logic for refreshUser and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> refreshUser() async {
     final cu = _authRepo.currentUser;
     if (cu == null) return;
@@ -122,6 +153,10 @@ class AuthProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  /// -----------------------------------------
+  /// Method: clearError
+  /// Purpose: Executes logic for clearError and handles state or UI updates.
+  /// -----------------------------------------
   void clearError() {
     _error = null;
     notifyListeners();

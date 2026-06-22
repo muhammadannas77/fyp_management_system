@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: splash_screen.dart
+/// Role: User Interface (View)
+/// 
+/// Description:
+/// Renders the visual elements of the application. Listens to Providers for state changes to display data dynamically. Contains purely presentation logic without direct database manipulation.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
@@ -31,6 +42,10 @@ class _SplashScreenState extends State<SplashScreen>
     _waitAndNavigate();
   }
 
+  /// -----------------------------------------
+  /// Method: _waitAndNavigate
+  /// Purpose: Executes logic for _waitAndNavigate and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> _waitAndNavigate() async {
     // Minimum splash time
     await Future.delayed(const Duration(seconds: 2));
@@ -50,6 +65,10 @@ class _SplashScreenState extends State<SplashScreen>
     _redirect(auth);
   }
 
+  /// -----------------------------------------
+  /// Method: _redirect
+  /// Purpose: Executes logic for _redirect and handles state or UI updates.
+  /// -----------------------------------------
   void _redirect(AuthProvider auth) {
     if (auth.status == AuthStatus.authenticated && auth.currentUser != null) {
       switch (auth.currentUser!.role) {

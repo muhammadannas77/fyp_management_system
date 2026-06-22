@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: project_management_screen.dart
+/// Role: User Interface (View)
+/// 
+/// Description:
+/// Renders the visual elements of the application. Listens to Providers for state changes to display data dynamically. Contains purely presentation logic without direct database manipulation.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
@@ -10,6 +21,10 @@ import '../student/project_history_screen.dart';
 class ProjectManagementScreen extends StatelessWidget {
   const ProjectManagementScreen({super.key});
 
+  /// -----------------------------------------
+  /// Method: _showCreateProjectDialog
+  /// Purpose: Executes logic for _showCreateProjectDialog and handles state or UI updates.
+  /// -----------------------------------------
   void _showCreateProjectDialog(BuildContext context) {
     final titleCtrl = TextEditingController();
     String? selectedStudentId;
@@ -121,6 +136,10 @@ class ProjectManagementScreen extends StatelessWidget {
     );
   }
 
+  /// -----------------------------------------
+  /// Method: _showEditProjectDialog
+  /// Purpose: Executes logic for _showEditProjectDialog and handles state or UI updates.
+  /// -----------------------------------------
   void _showEditProjectDialog(BuildContext context, ProjectModel project) {
     final titleCtrl = TextEditingController(text: project.title);
     String? selectedStudentId = project.studentId;

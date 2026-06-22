@@ -1,9 +1,24 @@
+/// ------------------------------------------------------------------
+/// File: other_repositories.dart
+/// Role: Database Access Layer (Repository)
+/// 
+/// Description:
+/// Abstracts all direct interactions with Firebase Firestore. Handles CRUD (Create, Read, Update, Delete) operations and provides continuous data streams to the Providers.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 
 class CommentRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// -----------------------------------------
+  /// Method: getComments
+  /// Purpose: Executes logic for getComments and handles state or UI updates.
+  /// -----------------------------------------
   Stream<List<CommentModel>> getComments(String projectId, int phaseNo) {
     return _firestore
         .collection('comments')
@@ -40,6 +55,10 @@ class CommentRepository {
 class NotificationRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// -----------------------------------------
+  /// Method: getNotifications
+  /// Purpose: Executes logic for getNotifications and handles state or UI updates.
+  /// -----------------------------------------
   Stream<List<NotificationModel>> getNotifications(String userId) {
     return _firestore
         .collection('notifications')
@@ -49,6 +68,10 @@ class NotificationRepository {
         .map((snap) => snap.docs.map(NotificationModel.fromFirestore).toList());
   }
 
+  /// -----------------------------------------
+  /// Method: getUnreadCount
+  /// Purpose: Executes logic for getUnreadCount and handles state or UI updates.
+  /// -----------------------------------------
   Future<int> getUnreadCount(String userId) async {
     final snap = await _firestore
         .collection('notifications')
@@ -76,12 +99,20 @@ class NotificationRepository {
     });
   }
 
+  /// -----------------------------------------
+  /// Method: markAsRead
+  /// Purpose: Executes logic for markAsRead and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> markAsRead(String notificationId) async {
     await _firestore.collection('notifications').doc(notificationId).update({
       'isRead': true,
     });
   }
 
+  /// -----------------------------------------
+  /// Method: markAllAsRead
+  /// Purpose: Executes logic for markAllAsRead and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> markAllAsRead(String userId) async {
     final snap = await _firestore
         .collection('notifications')
@@ -99,23 +130,37 @@ class NotificationRepository {
 class AuditTrailRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// -----------------------------------------
+  /// Method: getAuditTrail
+  /// Purpose: Executes logic for getAuditTrail and handles state or UI updates.
+  /// -----------------------------------------
   Stream<List<AuditTrailModel>> getAuditTrail(String projectId) {
     return _firestore
         .collection('audit_trails')
         .where('projectId', isEqualTo: projectId)
-        .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(AuditTrailModel.fromFirestore).toList());
+        .map((snap) {
+          final list = snap.docs.map(AuditTrailModel.fromFirestore).toList();
+          list.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return list;
+        });
   }
 
+  /// -----------------------------------------
+  /// Method: getAuditTrailByPhase
+  /// Purpose: Executes logic for getAuditTrailByPhase and handles state or UI updates.
+  /// -----------------------------------------
   Stream<List<AuditTrailModel>> getAuditTrailByPhase(String projectId, int phaseNo) {
     return _firestore
         .collection('audit_trails')
         .where('projectId', isEqualTo: projectId)
         .where('phaseNo', isEqualTo: phaseNo)
-        .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(AuditTrailModel.fromFirestore).toList());
+        .map((snap) {
+          final list = snap.docs.map(AuditTrailModel.fromFirestore).toList();
+          list.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return list;
+        });
   }
 
   Future<void> addAuditEntry({

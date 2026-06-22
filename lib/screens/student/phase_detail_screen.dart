@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: phase_detail_screen.dart
+/// Role: User Interface (View)
+/// 
+/// Description:
+/// Renders the visual elements of the application. Listens to Providers for state changes to display data dynamically. Contains purely presentation logic without direct database manipulation.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,6 +20,21 @@ import '../../utils/utils.dart';
 
 import '../shared/comment_thread_screen.dart';
 
+/// ------------------------------------------------------------------
+/// PhaseDetailScreen (Student Submission Workspace)
+/// ------------------------------------------------------------------
+/// This is the primary interface where a student manages a single phase.
+/// 
+/// Functionality features:
+/// 1. Dynamic Rendering: The form fields change depending on the phase number 
+///    (e.g., Phase 4 shows GitHub/Screenshot options, Phase 5 shows demo links).
+/// 2. Cloudinary File Uploads: Invokes the `ProjectProvider` to select and 
+///    upload files to Cloudinary directly from the device.
+/// 3. Read-Only State: If a phase is approved or pending review, the form 
+///    disappears and the screen becomes a read-only receipt of their submission.
+/// 4. Historical Transparency: Displays the activity log/audit trail of when 
+///    the phase was submitted, rejected, and approved.
+/// ------------------------------------------------------------------
 class PhaseDetailScreen extends StatefulWidget {
   final PhaseModel phase;
   final ProjectModel project;
@@ -47,6 +73,10 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
     super.dispose();
   }
 
+  /// -----------------------------------------
+  /// Method: _submit
+  /// Purpose: Executes logic for _submit and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> _submit(PhaseModel phase) async {
     if (_submissionCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,6 +128,10 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
     }
   }
 
+  /// -----------------------------------------
+  /// Method: _openFile
+  /// Purpose: Executes logic for _openFile and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> _openFile(String url) async {
     try {
       String finalUrl = url.trim();

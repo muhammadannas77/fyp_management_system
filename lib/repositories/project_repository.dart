@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: project_repository.dart
+/// Role: Database Access Layer (Repository)
+/// 
+/// Description:
+/// Abstracts all direct interactions with Firebase Firestore. Handles CRUD (Create, Read, Update, Delete) operations and provides continuous data streams to the Providers.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 import '../utils/utils.dart';
@@ -85,6 +96,10 @@ class ProjectRepository {
     return projects.first;
   }
 
+  /// -----------------------------------------
+  /// Method: getProjectsBySupervisorId
+  /// Purpose: Executes logic for getProjectsBySupervisorId and handles state or UI updates.
+  /// -----------------------------------------
   Stream<List<ProjectModel>> getProjectsBySupervisorId(String supervisorId) {
     return _firestore
         .collection('projects')
@@ -96,6 +111,10 @@ class ProjectRepository {
             .toList());
   }
 
+  /// -----------------------------------------
+  /// Method: getAllProjects
+  /// Purpose: Executes logic for getAllProjects and handles state or UI updates.
+  /// -----------------------------------------
   Stream<List<ProjectModel>> getAllProjects() {
     return _firestore
         .collection('projects')
@@ -104,12 +123,20 @@ class ProjectRepository {
         .map((snap) => snap.docs.map(ProjectModel.fromFirestore).toList());
   }
 
+  /// -----------------------------------------
+  /// Method: getProjectById
+  /// Purpose: Executes logic for getProjectById and handles state or UI updates.
+  /// -----------------------------------------
   Future<ProjectModel?> getProjectById(String id) async {
     final doc = await _firestore.collection('projects').doc(id).get();
     if (doc.exists) return ProjectModel.fromFirestore(doc);
     return null;
   }
 
+  /// -----------------------------------------
+  /// Method: updateProject
+  /// Purpose: Executes logic for updateProject and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> updateProject(String id, Map<String, dynamic> data) async {
     await _firestore.collection('projects').doc(id).update(data);
   }

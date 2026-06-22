@@ -1,9 +1,24 @@
+/// ------------------------------------------------------------------
+/// File: phase_repository.dart
+/// Role: Database Access Layer (Repository)
+/// 
+/// Description:
+/// Abstracts all direct interactions with Firebase Firestore. Handles CRUD (Create, Read, Update, Delete) operations and provides continuous data streams to the Providers.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 
 class PhaseRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// -----------------------------------------
+  /// Method: getPhasesByProjectId
+  /// Purpose: Executes logic for getPhasesByProjectId and handles state or UI updates.
+  /// -----------------------------------------
   Stream<List<PhaseModel>> getPhasesByProjectId(String projectId) {
     return _firestore
         .collection('phases')
@@ -13,6 +28,10 @@ class PhaseRepository {
         .map((snap) => snap.docs.map(PhaseModel.fromFirestore).toList());
   }
 
+  /// -----------------------------------------
+  /// Method: getPhaseByProjectAndNumber
+  /// Purpose: Executes logic for getPhaseByProjectAndNumber and handles state or UI updates.
+  /// -----------------------------------------
   Future<PhaseModel?> getPhaseByProjectAndNumber(String projectId, int phaseNo) async {
     final snap = await _firestore
         .collection('phases')
@@ -24,6 +43,10 @@ class PhaseRepository {
     return PhaseModel.fromFirestore(snap.docs.first);
   }
 
+  /// -----------------------------------------
+  /// Method: getPhaseById
+  /// Purpose: Executes logic for getPhaseById and handles state or UI updates.
+  /// -----------------------------------------
   Future<PhaseModel?> getPhaseById(String id) async {
     final doc = await _firestore.collection('phases').doc(id).get();
     if (doc.exists) return PhaseModel.fromFirestore(doc);
@@ -112,6 +135,10 @@ class PhaseRepository {
     });
   }
 
+  /// -----------------------------------------
+  /// Method: updatePhase
+  /// Purpose: Executes logic for updatePhase and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> updatePhase(String id, Map<String, dynamic> data) async {
     await _firestore.collection('phases').doc(id).update(data);
   }

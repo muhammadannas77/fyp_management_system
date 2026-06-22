@@ -1,3 +1,14 @@
+/// ------------------------------------------------------------------
+/// File: student_dashboard.dart
+/// Role: User Interface (View)
+/// 
+/// Description:
+/// Renders the visual elements of the application. Listens to Providers for state changes to display data dynamically. Contains purely presentation logic without direct database manipulation.
+/// 
+/// This file is part of the FYP Management System ecosystem.
+/// It strictly adheres to the MVVM architectural pattern.
+/// ------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
@@ -20,6 +31,7 @@ class StudentDashboard extends StatefulWidget {
 class _StudentDashboardState extends State<StudentDashboard> {
   final UserRepository _userRepo = UserRepository();
   String _supervisorName = '';
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
@@ -36,6 +48,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
     });
   }
 
+  /// -----------------------------------------
+  /// Method: _loadSupervisor
+  /// Purpose: Executes logic for _loadSupervisor and handles state or UI updates.
+  /// -----------------------------------------
   Future<void> _loadSupervisor(String? supervisorId) async {
     if (supervisorId == null) return;
     final sup = await _userRepo.getUserById(supervisorId);
@@ -51,7 +67,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final notifProv = context.watch<NotificationProvider>();
     final user = auth.currentUser;
 
-    if (user == null) {
+    if (_isLoggingOut || user == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -96,6 +112,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onSelected: (v) async {
               if (v == 'logout') {
+                setState(() => _isLoggingOut = true);
                 context.read<ProjectProvider>().stopListening();
                 context.read<NotificationProvider>().stopListening();
                 await context.read<AuthProvider>().signOut();
@@ -258,6 +275,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
+  /// -----------------------------------------
+  /// Method: _buildProgressBar
+  /// Purpose: Executes logic for _buildProgressBar and handles state or UI updates.
+  /// -----------------------------------------
   Widget _buildProgressBar(List<PhaseModel> phases) {
     final approved = phases.where((p) => p.isApproved).length;
     final total = phases.length;
