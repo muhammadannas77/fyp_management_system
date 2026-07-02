@@ -1016,7 +1016,30 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: widget.onApprove,
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Confirm Approval'),
+                                  content: const Text(
+                                    'Are you sure you want to approve this phase?\n\nPlease confirm before proceeding.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(ctx);
+                                        widget.onApprove();
+                                      },
+                                      child: const Text('Approve'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                             icon: const Icon(Icons.check, size: 16),
                             label: const Text('Approve'),
                             style: ElevatedButton.styleFrom(
