@@ -311,6 +311,18 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
       if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
         finalUrl = 'https://$finalUrl';
       }
+
+      if (finalUrl.contains('cloudinary.com') && 
+          finalUrl.toLowerCase().endsWith('.pdf') && 
+          finalUrl.contains('/upload/')) {
+        final String pdfUrl = finalUrl.replaceFirst('/upload/', '/upload/fl_attachment/');
+        final Uri pdfUri = Uri.parse(pdfUrl);
+        if (await canLaunchUrl(pdfUri)) {
+          final success = await launchUrl(pdfUri, mode: LaunchMode.externalApplication);
+          if (success) return;
+        }
+      }
+
       final uri = Uri.parse(finalUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
