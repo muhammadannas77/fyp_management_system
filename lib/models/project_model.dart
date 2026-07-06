@@ -22,6 +22,7 @@ class ProjectModel {
   final bool isArchived;
   final bool isDeleted;
   final DateTime? archivedAt;
+  final String phaseType;
 
   ProjectModel({
     required this.id,
@@ -34,6 +35,7 @@ class ProjectModel {
     this.isArchived = false,
     this.isDeleted = false,
     this.archivedAt,
+    this.phaseType = 'generic',
   });
 
   factory ProjectModel.fromFirestore(DocumentSnapshot doc) {
@@ -49,6 +51,7 @@ class ProjectModel {
       isArchived: data['isArchived'] ?? false,
       isDeleted: data['isDeleted'] ?? false,
       archivedAt: (data['archivedAt'] as Timestamp?)?.toDate(),
+      phaseType: data['phaseType'] ?? 'generic',
     );
   }
 
@@ -63,6 +66,7 @@ class ProjectModel {
       'isArchived': isArchived,
       'isDeleted': isDeleted,
       if (archivedAt != null) 'archivedAt': Timestamp.fromDate(archivedAt!),
+      'phaseType': phaseType,
     };
   }
 
@@ -77,6 +81,7 @@ class ProjectModel {
     bool? isArchived,
     bool? isDeleted,
     DateTime? archivedAt,
+    String? phaseType,
   }) {
     return ProjectModel(
       id: id ?? this.id,
@@ -89,6 +94,7 @@ class ProjectModel {
       isArchived: isArchived ?? this.isArchived,
       isDeleted: isDeleted ?? this.isDeleted,
       archivedAt: archivedAt ?? this.archivedAt,
+      phaseType: phaseType ?? this.phaseType,
     );
   }
 }

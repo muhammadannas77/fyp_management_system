@@ -1,10 +1,10 @@
 /// ------------------------------------------------------------------
 /// File: main.dart
 /// Role: Core Architecture File
-/// 
+///
 /// Description:
 /// Serves as an integral part of the FYP Management System architecture.
-/// 
+///
 /// This file is part of the FYP Management System ecosystem.
 /// It strictly adheres to the MVVM architectural pattern.
 /// ------------------------------------------------------------------
@@ -19,7 +19,7 @@ import 'firebase_options.dart';
 /// ------------------------------------------------------------------
 /// FYP Management System - Main Entry Point
 /// ------------------------------------------------------------------
-/// This file serves as the root initializer of the application. 
+/// This file serves as the root initializer of the application.
 /// Its primary responsibilities include:
 /// 1. Initializing the Flutter binding.
 /// 2. Establishing a connection to Firebase.
@@ -27,9 +27,9 @@ import 'firebase_options.dart';
 /// ------------------------------------------------------------------
 
 /// FCM background handler — must be a top-level or static function.
-/// This function listens for Firebase Cloud Messaging (FCM) push notifications 
+/// This function listens for Firebase Cloud Messaging (FCM) push notifications
 /// when the app is completely closed or running in the background.
-/// We initialize Firebase here again because the background isolate 
+/// We initialize Firebase here again because the background isolate
 /// runs independently from the main app isolate.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -58,4 +58,3 @@ void main() async {
   // Run the core app widget, which sets up the Providers and Theme.
   runApp(const FypApp());
 }
-

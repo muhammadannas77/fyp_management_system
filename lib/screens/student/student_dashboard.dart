@@ -246,8 +246,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   const SizedBox(height: 12),
                 ],
                 // Phase cards
-                if (phases.isEmpty)
+                if (!projectProv.phasesLoaded)
                   const Center(child: CircularProgressIndicator())
+                else if (phases.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: EmptyState(
+                      icon: Icons.pending_actions,
+                      title: 'No Phases Available',
+                      subtitle: project.phaseType == 'customized'
+                          ? 'Your supervisor has not created the project phases yet. Please wait until the phases are available.'
+                          : 'No phases have been assigned to this project.',
+                    ),
+                  )
                 else
                   ...phases.map(
                     (phase) => Padding(

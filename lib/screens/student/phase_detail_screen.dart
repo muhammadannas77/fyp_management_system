@@ -78,7 +78,7 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
   /// Purpose: Executes logic for _submit and handles state or UI updates.
   /// -----------------------------------------
   Future<void> _submit(PhaseModel phase) async {
-    if (_submissionCtrl.text.trim().isEmpty) {
+    if (phase.requireText && _submissionCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please add submission notes before submitting.'),
@@ -96,15 +96,15 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
       phaseId: phase.id,
       projectId: widget.project.id,
       phaseNo: phase.phaseNo,
-      submissionText: _submissionCtrl.text.trim(),
+      submissionText: phase.requireText ? _submissionCtrl.text.trim() : '',
       studentId: user.id,
       supervisorId: widget.project.supervisorId,
       studentName: user.name,
       isResubmission: isResubmission,
-      githubUrl: phase.phaseNo == 4 ? _githubCtrl.text.trim() : null,
+      githubUrl: phase.requireLink ? _githubCtrl.text.trim() : null,
       existingScreenshots: phase.screenshots,
-      demoVideoUrl: phase.phaseNo == 5 ? _demoVideoCtrl.text.trim() : null,
-      finalProjectLink: phase.phaseNo == 5 ? _finalLinkCtrl.text.trim() : null,
+      demoVideoUrl: null,
+      finalProjectLink: null,
     );
 
     if (!mounted) return;
@@ -230,10 +230,16 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                         ],
                       ),
                       const Divider(height: 20),
-                      InfoRow(
-                          icon: Icons.schedule,
-                          label: 'Duration',
-                          value: phase.duration),
+                      if (phase.duration.isNotEmpty)
+                        InfoRow(
+                            icon: Icons.schedule,
+                            label: 'Duration',
+                            value: phase.duration),
+                      if (phase.deadline != null)
+                        InfoRow(
+                            icon: Icons.calendar_today,
+                            label: 'Deadline',
+                            value: DateFormatter.formatDate(phase.deadline!)),
                       if (phase.submittedAt != null)
                         InfoRow(
                           icon: Icons.upload,
@@ -287,61 +293,67 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
               if (phase.isChangesRequested) const SizedBox(height: 8),
 
               // ── Requirements Card ───────────────────────────────────────
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.checklist,
-                              color: AppColors.primary, size: 20),
-                          SizedBox(width: 8),
-                          Text('Requirements',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 15)),
+              if (phase.requirements.isNotEmpty || (phase.description != null && phase.description!.isNotEmpty))
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(phase.requirements.isNotEmpty ? Icons.checklist : Icons.description,
+                                color: AppColors.primary, size: 20),
+                            const SizedBox(width: 8),
+                            Text(phase.requirements.isNotEmpty ? 'Requirements' : 'Description',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 15)),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        if (phase.description != null && phase.description!.isNotEmpty) ...[
+                          Text(phase.description!, style: const TextStyle(fontSize: 14)),
+                          if (phase.requirements.isNotEmpty) const SizedBox(height: 12),
                         ],
-                      ),
-                      const SizedBox(height: 10),
-                      ...phase.requirements.asMap().entries.map(
-                            (entry) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 22,
-                                    height: 22,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          AppColors.primary.withValues(alpha: 0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '${entry.key + 1}',
-                                        style: const TextStyle(
-                                            fontSize: 11,
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.bold),
+                        if (phase.requirements.isNotEmpty)
+                          ...phase.requirements.asMap().entries.map(
+                                (entry) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 22,
+                                        height: 22,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              AppColors.primary.withValues(alpha: 0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${entry.key + 1}',
+                                            style: const TextStyle(
+                                                fontSize: 11,
+                                                color: AppColors.primary,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(entry.value,
+                                            style:
+                                                const TextStyle(fontSize: 13)),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(entry.value,
-                                        style:
-                                            const TextStyle(fontSize: 13)),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
               const SizedBox(height: 8),
 
               // ── Existing Submitted File ─────────────────────────────────
@@ -584,30 +596,30 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                           ],
                         ),
                         const SizedBox(height: 14),
-                        TextField(
-                          controller: _submissionCtrl,
-                          maxLines: 5,
-                          decoration: InputDecoration(
-                            labelText: phase.phaseNo == 5 ? 'Final Submission Summary *' : (phase.phaseNo == 4 ? 'Development Summary *' : 'Submission Notes *'),
-                            hintText: phase.phaseNo == 5 
-                                ? 'Describe your final deliverables and overall project experience...' 
-                                : (phase.phaseNo == 4 
-                                    ? 'Describe development progress, features completed, and challenges...' 
-                                    : 'Describe what you have completed in this phase...'),
-                            alignLabelWithHint: true,
+                        if (phase.requireText) ...[
+                          TextField(
+                            controller: _submissionCtrl,
+                            maxLines: 5,
+                            decoration: const InputDecoration(
+                              labelText: 'Submission Notes *',
+                              hintText: 'Describe what you have completed in this phase...',
+                              alignLabelWithHint: true,
+                            ),
                           ),
-                        ),
-                        if (phase.phaseNo == 4) ...[
                           const SizedBox(height: 14),
+                        ],
+                        if (phase.requireLink) ...[
                           TextField(
                             controller: _githubCtrl,
                             decoration: const InputDecoration(
-                              labelText: 'GitHub Repository Link (Optional)',
-                              hintText: 'https://github.com/username/repo',
+                              labelText: 'Submit Link (GitHub / Drive / YouTube etc)',
+                              hintText: 'https://...',
                               prefixIcon: Icon(Icons.link),
                             ),
                           ),
                           const SizedBox(height: 14),
+                        ],
+                        if (phase.requireImage) ...[
                           Consumer<ProjectProvider>(
                             builder: (_, prov, __) => Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,95 +672,35 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                               ],
                             ),
                           ),
-                        ],
-                        if (phase.phaseNo == 5) ...[
                           const SizedBox(height: 14),
-                          TextField(
-                            controller: _demoVideoCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Demo Video Link (Optional)',
-                              hintText: 'YouTube, Google Drive link...',
-                              prefixIcon: Icon(Icons.video_library),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          TextField(
-                            controller: _finalLinkCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Final Application / Project Link (Optional)',
-                              hintText: 'Website URL, APK link, GitHub...',
-                              prefixIcon: Icon(Icons.link),
-                            ),
-                          ),
                         ],
-                        const SizedBox(height: 14),
-
-                        // File picker section
-                        Consumer<ProjectProvider>(
-                          builder: (_, prov, __) => Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (prov.selectedFile != null) ...[
-                                FileAttachmentRow(
-                                  fileName: prov.selectedFile!.name,
-                                  showRemove: true,
-                                  onRemove: prov.clearSelectedFile,
-                                ),
-                                const SizedBox(height: 10),
-                              ],
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: prov.loading ? null : prov.pickFile,
-                                  icon: const Icon(Icons.attach_file, size: 18),
-                                  label: Text(prov.selectedFile != null
-                                      ? 'Change File'
-                                      : (phase.phaseNo == 5 ? 'Documentation Upload (PDF/DOC)' : 'Attach PDF / DOC (optional)')),
-                                ),
-                              ),
-                              if (phase.phaseNo == 5) ...[
-                                const SizedBox(height: 14),
-                                if (prov.presentationFile != null) ...[
+                        if (phase.requireFile) ...[
+                          Consumer<ProjectProvider>(
+                            builder: (_, prov, __) => Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (prov.selectedFile != null) ...[
                                   FileAttachmentRow(
-                                    fileName: prov.presentationFile!.name,
+                                    fileName: prov.selectedFile!.name,
                                     showRemove: true,
-                                    onRemove: prov.clearPresentationFile,
+                                    onRemove: prov.clearSelectedFile,
                                   ),
                                   const SizedBox(height: 10),
                                 ],
                                 SizedBox(
                                   width: double.infinity,
                                   child: OutlinedButton.icon(
-                                    onPressed: prov.loading ? null : prov.pickPresentationFile,
-                                    icon: const Icon(Icons.slideshow, size: 18),
-                                    label: Text(prov.presentationFile != null
-                                        ? 'Change Presentation'
-                                        : 'Presentation Upload (PPT/PDF)'),
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                if (prov.testCasesFile != null) ...[
-                                  FileAttachmentRow(
-                                    fileName: prov.testCasesFile!.name,
-                                    showRemove: true,
-                                    onRemove: prov.clearTestCasesFile,
-                                  ),
-                                  const SizedBox(height: 10),
-                                ],
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton.icon(
-                                    onPressed: prov.loading ? null : prov.pickTestCasesFile,
-                                    icon: const Icon(Icons.fact_check, size: 18),
-                                    label: Text(prov.testCasesFile != null
-                                        ? 'Change Test Cases'
-                                        : 'Test Cases Upload (PDF/DOC)'),
+                                    onPressed: prov.loading ? null : prov.pickFile,
+                                    icon: const Icon(Icons.attach_file, size: 18),
+                                    label: Text(prov.selectedFile != null
+                                        ? 'Change File'
+                                        : 'Attach PDF / DOC'),
                                   ),
                                 ),
                               ],
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                         const SizedBox(height: 14),
 
                         SizedBox(

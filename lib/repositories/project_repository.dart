@@ -20,6 +20,7 @@ class ProjectRepository {
     required String studentId,
     required String supervisorId,
     required String title,
+    String phaseType = 'generic',
   }) async {
     final ref = _firestore.collection('projects').doc();
 
@@ -30,35 +31,38 @@ class ProjectRepository {
       'currentPhase': 1,
       'status': 'active',
       'createdAt': FieldValue.serverTimestamp(),
+      'phaseType': phaseType,
     });
 
-    // Create all 5 phases in a batch
-    final batch = _firestore.batch();
-    for (final phaseData in PhaseData.allPhases) {
-      final phaseRef = _firestore.collection('phases').doc();
-      batch.set(phaseRef, {
-        'projectId': ref.id,
-        'phaseNo': phaseData['phaseNo'],
-        'title': phaseData['title'],
-        'duration': phaseData['duration'],
-        'requirements': phaseData['requirements'],
-        'status': phaseData['phaseNo'] == 1 ? 'pending_submission' : 'locked',
-        'unlocked': phaseData['phaseNo'] == 1,
-        'submissionText': null,
-        'fileUrl': null,
-        'fileName': null,
-        'submittedAt': null,
-        'submittedBy': null,
-        'changesRequestedAt': null,
-        'changeRequestReason': null,
-        'resubmittedAt': null,
-        'approvedAt': null,
-        'reviewedAt': null,
-        'reviewedBy': null,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+    if (phaseType == 'generic') {
+      // Create all 5 phases in a batch
+      final batch = _firestore.batch();
+      for (final phaseData in PhaseData.allPhases) {
+        final phaseRef = _firestore.collection('phases').doc();
+        batch.set(phaseRef, {
+          'projectId': ref.id,
+          'phaseNo': phaseData['phaseNo'],
+          'title': phaseData['title'],
+          'duration': phaseData['duration'],
+          'requirements': phaseData['requirements'],
+          'status': phaseData['phaseNo'] == 1 ? 'pending_submission' : 'locked',
+          'unlocked': phaseData['phaseNo'] == 1,
+          'submissionText': null,
+          'fileUrl': null,
+          'fileName': null,
+          'submittedAt': null,
+          'submittedBy': null,
+          'changesRequestedAt': null,
+          'changeRequestReason': null,
+          'resubmittedAt': null,
+          'approvedAt': null,
+          'reviewedAt': null,
+          'reviewedBy': null,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
     }
-    await batch.commit();
 
     final doc = await ref.get();
     return ProjectModel.fromFirestore(doc);

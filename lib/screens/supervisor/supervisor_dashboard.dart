@@ -239,7 +239,7 @@ class _ProjectCard extends StatelessWidget {
             final isPhaseLoading = phaseSnap.connectionState == ConnectionState.waiting;
             final phases = phaseSnap.data ?? [];
 
-            if (isStudentLoading || isPhaseLoading || phases.isEmpty) {
+            if (isStudentLoading || isPhaseLoading) {
               return const Card(
                 margin: EdgeInsets.only(bottom: 12),
                 child: SizedBox(
@@ -260,7 +260,7 @@ class _ProjectCard extends StatelessWidget {
 
             final studentName = student?.name ?? 'Unknown Student';
 
-            final phaseStatusLabel = currentPhase != null ? StatusHelper.getLabel(currentPhase.status) : 'Unknown';
+            final phaseStatusLabel = currentPhase != null ? StatusHelper.getLabel(currentPhase.status) : 'No Phases';
 
             final phaseStatusColor = currentPhase != null ? StatusHelper.getColor(currentPhase.status) : Colors.grey;
 
@@ -332,35 +332,47 @@ class _ProjectCard extends StatelessWidget {
                                 currentPhase.submittedAt)),
                       const SizedBox(height: 8),
                       // Phase progress chips
-                      Wrap(
-                        spacing: 6,
-                        children: phases
-                              .map((p) => Container(
-                                    width: 28,
-                                    height: 28,
-                                    decoration: BoxDecoration(
-                                      color: StatusHelper.getColor(p.status)
-                                          .withValues(alpha: 0.2),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: StatusHelper.getColor(p.status),
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '${p.phaseNo}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color:
-                                              StatusHelper.getColor(p.status),
+                      if (phases.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'No phases created yet.',
+                            style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                                fontSize: 13),
+                          ),
+                        )
+                      else
+                        Wrap(
+                          spacing: 6,
+                          children: phases
+                                .map((p) => Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                        color: StatusHelper.getColor(p.status)
+                                            .withValues(alpha: 0.2),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: StatusHelper.getColor(p.status),
+                                          width: 1.5,
                                         ),
                                       ),
-                                    ),
-                                  ))
-                              .toList(),
-                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${p.phaseNo}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color:
+                                                StatusHelper.getColor(p.status),
+                                          ),
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                        ),
                     ],
                   ),
                 ),

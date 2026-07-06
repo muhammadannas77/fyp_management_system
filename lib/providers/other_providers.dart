@@ -177,6 +177,7 @@ class AdminProvider extends ChangeNotifier {
     required String studentId,
     required String supervisorId,
     required String title,
+    String phaseType = 'generic',
   }) async {
     _loading = true;
     _error = null;
@@ -196,6 +197,7 @@ class AdminProvider extends ChangeNotifier {
         studentId: studentId,
         supervisorId: supervisorId,
         title: title,
+        phaseType: phaseType,
       );
 
       final student = _students.cast<UserModel?>().firstWhere(

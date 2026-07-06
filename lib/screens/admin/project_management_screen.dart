@@ -29,6 +29,7 @@ class ProjectManagementScreen extends StatelessWidget {
     final titleCtrl = TextEditingController();
     String? selectedStudentId;
     String? selectedSupervisorId;
+    String phaseType = 'generic';
     final formKey = GlobalKey<FormState>();
     final admin = context.read<AdminProvider>();
 
@@ -91,6 +92,29 @@ class ProjectManagementScreen extends StatelessWidget {
                         setDialogState(() => selectedSupervisorId = v),
                     validator: (v) => v == null ? 'Select a supervisor' : null,
                   ),
+                  const SizedBox(height: 12),
+                  // Phase Type dropdown
+                  DropdownButtonFormField<String>(
+                    value: phaseType,
+                    decoration:
+                        const InputDecoration(labelText: 'Phase Type'),
+                    dropdownColor: Colors.white,
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'generic',
+                        child: Text('Generic Phases',
+                            style: TextStyle(color: Colors.black87)),
+                      ),
+                      DropdownMenuItem(
+                        value: 'customized',
+                        child: Text('Customized Phases',
+                            style: TextStyle(color: Colors.black87)),
+                      ),
+                    ],
+                    onChanged: (v) =>
+                        setDialogState(() => phaseType = v!),
+                  ),
                 ],
               ),
             ),
@@ -109,6 +133,7 @@ class ProjectManagementScreen extends StatelessWidget {
                           studentId: selectedStudentId!,
                           supervisorId: selectedSupervisorId!,
                           title: titleCtrl.text.trim(),
+                          phaseType: phaseType,
                         );
                         if (!context.mounted) return;
                         Navigator.pop(ctx);
@@ -496,7 +521,7 @@ class ProjectManagementScreen extends StatelessWidget {
                 InfoRow(
                     icon: Icons.layers,
                     label: 'Phase',
-                    value: 'Phase ${project.currentPhase} / 5',
+                    value: 'Phase ${project.currentPhase}',
                     valueColor: AppColors.primary),
                 InfoRow(
                     icon: Icons.calendar_today,
@@ -511,7 +536,9 @@ class ProjectManagementScreen extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: project.currentPhase / 5,
+                    value: project.status == 'completed' 
+                        ? 1.0 
+                        : (project.phaseType == 'generic' ? (project.currentPhase / 5) : null),
                     minHeight: 6,
                     backgroundColor: AppColors.divider,
                     valueColor: AlwaysStoppedAnimation<Color>(

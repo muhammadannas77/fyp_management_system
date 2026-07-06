@@ -39,6 +39,7 @@ class ProjectProvider extends ChangeNotifier {
   ProjectModel? _project;
   List<PhaseModel> _phases = [];
   bool _loading = false;
+  bool _phasesLoaded = false;
   String? _error;
   PlatformFile? _selectedFile;
   final List<PlatformFile> _selectedScreenshots = [];
@@ -51,6 +52,7 @@ class ProjectProvider extends ChangeNotifier {
   ProjectModel? get project => _project;
   List<PhaseModel> get phases => _phases;
   bool get loading => _loading;
+  bool get phasesLoaded => _phasesLoaded;
   String? get error => _error;
   PlatformFile? get selectedFile => _selectedFile;
   List<PlatformFile> get selectedScreenshots => _selectedScreenshots;
@@ -67,9 +69,11 @@ class ProjectProvider extends ChangeNotifier {
       (project) {
         _project = project;
         if (project != null) {
+          _phasesLoaded = false; // Reset when project changes
           _listenToPhases(project.id);
         } else {
           _phases = [];
+          _phasesLoaded = true;
           _phasesSub?.cancel();
           _selectedFile = null;
           _selectedScreenshots.clear();
@@ -78,7 +82,10 @@ class ProjectProvider extends ChangeNotifier {
         }
         notifyListeners();
       },
-      onError: (_) {},
+      onError: (_) {
+        _phasesLoaded = true;
+        notifyListeners();
+      },
     );
   }
 
@@ -91,9 +98,13 @@ class ProjectProvider extends ChangeNotifier {
     _phasesSub = _phaseRepo.getPhasesByProjectId(projectId).listen(
       (phases) {
         _phases = phases;
+        _phasesLoaded = true;
         notifyListeners();
       },
-      onError: (_) {},
+      onError: (_) {
+        _phasesLoaded = true;
+        notifyListeners();
+      },
     );
   }
 
@@ -375,31 +386,59 @@ class ProjectProvider extends ChangeNotifier {
         ),
       ];
 
-      if (phase.phaseNo < totalPhases) {
-        futures.addAll([
-          _phaseRepo.unlockNextPhase(
-              projectId: projectId, nextPhaseNo: phase.phaseNo + 1),
-          _projectRepo
-              .updateProject(projectId, {'currentPhase': phase.phaseNo + 1}),
-          _auditRepo.addAuditEntry(
-            projectId: projectId,
-            phaseNo: phase.phaseNo + 1,
-            action: 'phase_unlocked',
-            performedBy: supervisorId,
-            role: 'supervisor',
-            message: 'Phase ${phase.phaseNo + 1} unlocked',
-          ),
-          _notifRepo.sendNotification(
-            userId: studentId,
-            message: 'Phase ${phase.phaseNo + 1} is now unlocked!',
-            type: 'phase_unlocked',
-            projectId: projectId,
-            phaseNo: phase.phaseNo + 1,
-          ),
-        ]);
+      final isCustomized = _project?.phaseType == 'customized';
+
+      if (isCustomized) {
+        final unlocked = await _phaseRepo.unlockNextPhase(
+            projectId: projectId, nextPhaseNo: phase.phaseNo + 1);
+        if (unlocked) {
+          futures.addAll([
+            _projectRepo
+                .updateProject(projectId, {'currentPhase': phase.phaseNo + 1}),
+            _auditRepo.addAuditEntry(
+              projectId: projectId,
+              phaseNo: phase.phaseNo + 1,
+              action: 'phase_unlocked',
+              performedBy: supervisorId,
+              role: 'supervisor',
+              message: 'Phase ${phase.phaseNo + 1} unlocked',
+            ),
+            _notifRepo.sendNotification(
+              userId: studentId,
+              message: 'Phase ${phase.phaseNo + 1} is now unlocked!',
+              type: 'phase_unlocked',
+              projectId: projectId,
+              phaseNo: phase.phaseNo + 1,
+            ),
+          ]);
+        }
       } else {
-        futures.add(_projectRepo
-            .updateProject(projectId, {'status': 'completed'}));
+        if (phase.phaseNo < totalPhases) {
+          futures.addAll([
+            _phaseRepo.unlockNextPhase(
+                projectId: projectId, nextPhaseNo: phase.phaseNo + 1),
+            _projectRepo
+                .updateProject(projectId, {'currentPhase': phase.phaseNo + 1}),
+            _auditRepo.addAuditEntry(
+              projectId: projectId,
+              phaseNo: phase.phaseNo + 1,
+              action: 'phase_unlocked',
+              performedBy: supervisorId,
+              role: 'supervisor',
+              message: 'Phase ${phase.phaseNo + 1} unlocked',
+            ),
+            _notifRepo.sendNotification(
+              userId: studentId,
+              message: 'Phase ${phase.phaseNo + 1} is now unlocked!',
+              type: 'phase_unlocked',
+              projectId: projectId,
+              phaseNo: phase.phaseNo + 1,
+            ),
+          ]);
+        } else {
+          futures.add(_projectRepo
+              .updateProject(projectId, {'status': 'completed'}));
+        }
       }
 
       await Future.wait(futures);

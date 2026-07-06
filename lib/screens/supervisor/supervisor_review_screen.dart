@@ -1,10 +1,10 @@
 /// ------------------------------------------------------------------
 /// File: supervisor_review_screen.dart
 /// Role: User Interface (View)
-/// 
+///
 /// Description:
 /// Renders the visual elements of the application. Listens to Providers for state changes to display data dynamically. Contains purely presentation logic without direct database manipulation.
-/// 
+///
 /// This file is part of the FYP Management System ecosystem.
 /// It strictly adheres to the MVVM architectural pattern.
 /// ------------------------------------------------------------------
@@ -20,20 +20,21 @@ import '../../constants/app_constants.dart';
 import '../../utils/utils.dart';
 import '../shared/comment_thread_screen.dart';
 import '../student/project_history_screen.dart';
+import 'custom_phases_management_screen.dart';
 
 /// ------------------------------------------------------------------
 /// SupervisorReviewScreen (Evaluation Workspace)
 /// ------------------------------------------------------------------
 /// This screen acts as the Supervisor's control center for a specific student's project.
-/// 
+///
 /// Functionality features:
-/// 1. Unified Timeline View: Displays all 5 phases in a scrollable list, highlighting 
+/// 1. Unified Timeline View: Displays all 5 phases in a scrollable list, highlighting
 ///    the current active phase and providing historical context of past phases.
-/// 2. Evaluation Mechanics: Supervisors can accept or reject a phase. 
+/// 2. Evaluation Mechanics: Supervisors can accept or reject a phase.
 ///    - Approving triggers the `ProjectProvider` to unlock the next phase.
 ///    - Requesting changes requires a mandatory comment explaining the rejection.
 /// 3. Resource Fetching: Securely downloads and opens files (Cloudinary URLs) via the OS browser.
-/// 4. Direct Communication: Embeds a comment thread specific to each phase, keeping 
+/// 4. Direct Communication: Embeds a comment thread specific to each phase, keeping
 ///    all project discussions tightly coupled to their relevant deliverables.
 /// ------------------------------------------------------------------
 class SupervisorReviewScreen extends StatefulWidget {
@@ -55,13 +56,11 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
   bool _loading = false;
   String? _error;
 
-  static const int _totalPhases = 5;
-
   /// -----------------------------------------
   /// Method: _approvePhase
   /// Purpose: Executes logic for _approvePhase and handles state or UI updates.
   /// -----------------------------------------
-  Future<void> _approvePhase(PhaseModel phase) async {
+  Future<void> _approvePhase(PhaseModel phase, int totalPhases) async {
     final supervisor = context.read<AuthProvider>().currentUser;
     if (supervisor == null) return;
 
@@ -97,7 +96,7 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
       );
 
       // 4. Unlock next phase OR mark project complete
-      if (phase.phaseNo < _totalPhases) {
+      if (phase.phaseNo < totalPhases) {
         await _phaseRepo.unlockNextPhase(
           projectId: widget.project.id,
           nextPhaseNo: phase.phaseNo + 1,
@@ -112,8 +111,7 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
           action: 'phase_unlocked',
           performedBy: supervisor.id,
           role: 'supervisor',
-          message:
-              'Phase ${phase.phaseNo + 1} unlocked by ${supervisor.name}',
+          message: 'Phase ${phase.phaseNo + 1} unlocked by ${supervisor.name}',
         );
         await _notifRepo.sendNotification(
           userId: widget.project.studentId,
@@ -141,7 +139,7 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(phase.phaseNo < _totalPhases
+          content: Text(phase.phaseNo < totalPhases
               ? 'Phase ${phase.phaseNo} approved! Phase ${phase.phaseNo + 1} unlocked.'
               : 'Final phase approved! Project completed!'),
           backgroundColor: AppColors.approved,
@@ -312,13 +310,15 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
         finalUrl = 'https://$finalUrl';
       }
 
-      if (finalUrl.contains('cloudinary.com') && 
-          finalUrl.toLowerCase().endsWith('.pdf') && 
+      if (finalUrl.contains('cloudinary.com') &&
+          finalUrl.toLowerCase().endsWith('.pdf') &&
           finalUrl.contains('/upload/')) {
-        final String pdfUrl = finalUrl.replaceFirst('/upload/', '/upload/fl_attachment/');
+        final String pdfUrl =
+            finalUrl.replaceFirst('/upload/', '/upload/fl_attachment/');
         final Uri pdfUri = Uri.parse(pdfUrl);
         if (await canLaunchUrl(pdfUri)) {
-          final success = await launchUrl(pdfUri, mode: LaunchMode.externalApplication);
+          final success =
+              await launchUrl(pdfUri, mode: LaunchMode.externalApplication);
           if (success) return;
         }
       }
@@ -357,18 +357,33 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
             children: [
               Text(
                 widget.project.title,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
               ),
               if (widget.student != null)
                 Text(
                   widget.student!.name,
-                  style:
-                      const TextStyle(fontSize: 11, color: Colors.white70),
+                  style: const TextStyle(fontSize: 11, color: Colors.white70),
                 ),
             ],
           ),
           actions: [
+            if (widget.project.phaseType == 'customized')
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.white),
+                tooltip: 'Manage Custom Phases',
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        CustomPhasesManagementScreen(project: widget.project),
+                  ),
+                ).then((_) {
+                  // Ensure UI updates if needed
+                  setState(() {});
+                }),
+              ),
             IconButton(
               icon: const Icon(Icons.history, color: Colors.white),
               tooltip: 'Full Project History',
@@ -389,8 +404,8 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
               Container(
                 width: double.infinity,
                 color: AppColors.error.withValues(alpha: 0.1),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     const Icon(Icons.error_outline,
@@ -398,8 +413,7 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                         child: Text(_error!,
-                            style:
-                                const TextStyle(color: AppColors.error))),
+                            style: const TextStyle(color: AppColors.error))),
                     IconButton(
                       icon: const Icon(Icons.close,
                           size: 16, color: AppColors.error),
@@ -424,9 +438,37 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
                   }
                   final phases = snap.data ?? [];
                   if (phases.isEmpty) {
-                    return const EmptyState(
-                      icon: Icons.layers,
-                      title: 'No phases found',
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        EmptyState(
+                          icon: Icons.layers,
+                          title: 'No phases found',
+                          subtitle: widget.project.phaseType == 'customized'
+                              ? 'No phases have been created for this project yet.'
+                              : null,
+                        ),
+                        if (widget.project.phaseType == 'customized') ...[
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CustomPhasesManagementScreen(
+                                    project: widget.project),
+                              ),
+                            ).then((_) {
+                              setState(() {});
+                            }),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Create Phases'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                            ),
+                          ),
+                        ],
+                      ],
                     );
                   }
                   return SingleChildScrollView(
@@ -450,7 +492,8 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
                             child: _PhaseReviewCard(
                               phase: phase,
                               project: widget.project,
-                              onApprove: () => _approvePhase(phase),
+                              onApprove: () =>
+                                  _approvePhase(phase, phases.length),
                               onRequestChanges: () => _requestChanges(phase),
                               onOpenFile: _openFile,
                             ),
@@ -517,8 +560,7 @@ class _StudentInfoCard extends StatelessWidget {
                               fontSize: 15, fontWeight: FontWeight.bold)),
                       Text(student.email,
                           style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary)),
+                              fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
@@ -530,7 +572,7 @@ class _StudentInfoCard extends StatelessWidget {
                 Expanded(
                     child: _MiniStat(
                         label: 'Current Phase',
-                        value: '${project.currentPhase}/5',
+                        value: '${project.currentPhase}/${phases.length}',
                         color: AppColors.primary)),
                 Expanded(
                     child: _MiniStat(
@@ -605,16 +647,27 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
   void initState() {
     super.initState();
     // Auto-expand submitted phases
-    _expanded = widget.phase.isSubmitted || widget.phase.isChangesRequested;
-    _auditStream = AuditTrailRepository().getAuditTrailByPhase(
-        widget.project.id, widget.phase.phaseNo);
+    _expanded = !widget.phase.isLocked &&
+        (widget.phase.isSubmitted || widget.phase.isChangesRequested);
+    _auditStream = AuditTrailRepository()
+        .getAuditTrailByPhase(widget.project.id, widget.phase.phaseNo);
+  }
+
+  @override
+  void didUpdateWidget(_PhaseReviewCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.phase.isLocked) {
+      _expanded = false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final phase = widget.phase;
+    final isCustomized = widget.project.phaseType == 'customized';
     final isActionable = phase.isSubmitted;
-    final borderColor = isActionable
+    final isEffectivelyLocked = phase.isLocked;
+    final borderColor = phase.isSubmitted
         ? AppColors.submitted
         : phase.isApproved
             ? AppColors.approved
@@ -632,7 +685,7 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
           // Header - always visible
           InkWell(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            onTap: phase.isLocked
+            onTap: isEffectivelyLocked
                 ? null
                 : () => setState(() => _expanded = !_expanded),
             child: Padding(
@@ -648,7 +701,7 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: phase.isLocked
+                      child: isEffectivelyLocked
                           ? Icon(Icons.lock,
                               size: 16,
                               color: StatusHelper.getColor(phase.status))
@@ -675,14 +728,13 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                           Text(
                             'Submitted: ${DateFormatter.format(phase.submittedAt)}',
                             style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary),
+                                fontSize: 11, color: AppColors.textSecondary),
                           ),
                       ],
                     ),
                   ),
                   StatusBadge(status: phase.status),
-                  if (!phase.isLocked) ...[
+                  if (!isEffectivelyLocked) ...[
                     const SizedBox(width: 4),
                     Icon(
                       _expanded
@@ -735,8 +787,8 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                     InfoRow(
                       icon: Icons.timer,
                       label: 'Review Time',
-                      value: DateFormatter.formatDuration(
-                          phase.reviewDuration!),
+                      value:
+                          DateFormatter.formatDuration(phase.reviewDuration!),
                     ),
 
                   // Submission notes
@@ -744,7 +796,9 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                       phase.submissionText!.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Text(
-                      phase.phaseNo == 4 ? 'Development Summary' : 'Submission Notes',
+                      phase.phaseNo == 4
+                          ? 'Development Summary'
+                          : 'Submission Notes',
                       style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
@@ -797,16 +851,19 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                         decoration: BoxDecoration(
                           color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                          border: Border.all(
+                              color: AppColors.error.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, size: 20, color: AppColors.error),
+                            const Icon(Icons.error_outline,
+                                size: 20, color: AppColors.error),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '${phase.fileName} (File not uploaded yet)',
-                                style: const TextStyle(color: AppColors.error, fontSize: 13),
+                                style: const TextStyle(
+                                    color: AppColors.error, fontSize: 13),
                               ),
                             ),
                           ],
@@ -814,20 +871,29 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                       ),
                   ],
                   // GitHub Link
-                  if (phase.githubUrl != null && phase.githubUrl!.isNotEmpty) ...[
+                  if (phase.githubUrl != null &&
+                      phase.githubUrl!.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    const Text('GitHub Repository', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    const Text('GitHub Repository',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 13)),
                     const SizedBox(height: 4),
                     InkWell(
                       onTap: () => widget.onOpenFile(phase.githubUrl!),
-                      child: Text(phase.githubUrl!, style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline)),
+                      child: Text(phase.githubUrl!,
+                          style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline)),
                     ),
                   ],
 
                   // Screenshots
-                  if (phase.screenshots != null && phase.screenshots!.isNotEmpty) ...[
+                  if (phase.screenshots != null &&
+                      phase.screenshots!.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    const Text('Screenshots', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    const Text('Screenshots',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 13)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -845,7 +911,11 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image, color: Colors.grey)),
+                              child: Image.network(url,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.image,
+                                      color: Colors.grey)),
                             ),
                           ),
                         );
@@ -854,42 +924,58 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                   ],
 
                   // Phase 5 Deliverables
-                  if (phase.demoVideoUrl != null && phase.demoVideoUrl!.isNotEmpty) ...[
+                  if (phase.demoVideoUrl != null &&
+                      phase.demoVideoUrl!.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    const Text('Demo Video Link', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    const Text('Demo Video Link',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 13)),
                     const SizedBox(height: 4),
                     InkWell(
                       onTap: () => widget.onOpenFile(phase.demoVideoUrl!),
-                      child: Text(phase.demoVideoUrl!, style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline)),
+                      child: Text(phase.demoVideoUrl!,
+                          style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline)),
                     ),
                   ],
-                  if (phase.finalProjectLink != null && phase.finalProjectLink!.isNotEmpty) ...[
+                  if (phase.finalProjectLink != null &&
+                      phase.finalProjectLink!.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    const Text('Final Project Link', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    const Text('Final Project Link',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 13)),
                     const SizedBox(height: 4),
                     InkWell(
                       onTap: () => widget.onOpenFile(phase.finalProjectLink!),
-                      child: Text(phase.finalProjectLink!, style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline)),
+                      child: Text(phase.finalProjectLink!,
+                          style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline)),
                     ),
                   ],
-                  if (phase.presentationUrl != null || phase.presentationName != null) ...[
+                  if (phase.presentationUrl != null ||
+                      phase.presentationName != null) ...[
                     const SizedBox(height: 10),
                     if (phase.presentationUrl != null)
                       Row(
                         children: [
                           Expanded(
                             child: FileAttachmentRow(
-                              fileName: phase.presentationName ?? 'Presentation',
+                              fileName:
+                                  phase.presentationName ?? 'Presentation',
                               fileUrl: phase.presentationUrl,
                             ),
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton.icon(
-                            onPressed: () => widget.onOpenFile(phase.presentationUrl!),
+                            onPressed: () =>
+                                widget.onOpenFile(phase.presentationUrl!),
                             icon: const Icon(Icons.open_in_new, size: 14),
                             label: const Text('Open'),
                             style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
                               textStyle: const TextStyle(fontSize: 12),
                             ),
                           ),
@@ -901,23 +987,27 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                         decoration: BoxDecoration(
                           color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                          border: Border.all(
+                              color: AppColors.error.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, size: 20, color: AppColors.error),
+                            const Icon(Icons.error_outline,
+                                size: 20, color: AppColors.error),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '${phase.presentationName} (File not uploaded yet)',
-                                style: const TextStyle(color: AppColors.error, fontSize: 13),
+                                style: const TextStyle(
+                                    color: AppColors.error, fontSize: 13),
                               ),
                             ),
                           ],
                         ),
                       ),
                   ],
-                  if (phase.testCasesUrl != null || phase.testCasesName != null) ...[
+                  if (phase.testCasesUrl != null ||
+                      phase.testCasesName != null) ...[
                     const SizedBox(height: 10),
                     if (phase.testCasesUrl != null)
                       Row(
@@ -930,11 +1020,13 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton.icon(
-                            onPressed: () => widget.onOpenFile(phase.testCasesUrl!),
+                            onPressed: () =>
+                                widget.onOpenFile(phase.testCasesUrl!),
                             icon: const Icon(Icons.open_in_new, size: 14),
                             label: const Text('Open'),
                             style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
                               textStyle: const TextStyle(fontSize: 12),
                             ),
                           ),
@@ -946,16 +1038,19 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                         decoration: BoxDecoration(
                           color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                          border: Border.all(
+                              color: AppColors.error.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, size: 20, color: AppColors.error),
+                            const Icon(Icons.error_outline,
+                                size: 20, color: AppColors.error),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '${phase.testCasesName} (File not uploaded yet)',
-                                style: const TextStyle(color: AppColors.error, fontSize: 13),
+                                style: const TextStyle(
+                                    color: AppColors.error, fontSize: 13),
                               ),
                             ),
                           ],
@@ -969,10 +1064,12 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.changesRequested.withValues(alpha: 0.06),
+                        color:
+                            AppColors.changesRequested.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: AppColors.changesRequested.withValues(alpha: 0.3)),
+                            color: AppColors.changesRequested
+                                .withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1008,8 +1105,7 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                               foregroundColor: AppColors.changesRequested,
                               side: const BorderSide(
                                   color: AppColors.changesRequested),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 10),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                             ),
                           ),
                         ),
@@ -1044,8 +1140,7 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                             label: const Text('Approve'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.approved,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 10),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                             ),
                           ),
                         ),
@@ -1053,67 +1148,69 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                     ),
 
                   // Comments button — always show for non-locked phases
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CommentThreadScreen(
-                            projectId: widget.project.id,
-                            phaseNo: phase.phaseNo,
-                            phaseTitle: phase.title,
-                          ),
-                        ),
-                      ),
-                      icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                      label: const Text('View / Add Comments'),
-                    ),
-                  ),
-
-                  // Audit trail for this phase
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Activity',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 8),
-                  StreamBuilder<List<AuditTrailModel>>(
-                    stream: _auditStream,
-                    builder: (context, snap) {
-                      if (snap.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                  if (!phase.isLocked && _expanded) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CommentThreadScreen(
+                              projectId: widget.project.id,
+                              phaseNo: phase.phaseNo,
+                              phaseTitle: phase.title,
                             ),
                           ),
+                        ),
+                        icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                        label: const Text('View / Add Comments'),
+                      ),
+                    ),
+
+                    // Audit trail for this phase
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Activity',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    StreamBuilder<List<AuditTrailModel>>(
+                      stream: _auditStream,
+                      builder: (context, snap) {
+                        if (snap.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          );
+                        }
+                        final audits = snap.data ?? [];
+                        if (audits.isEmpty) {
+                          return const Text(
+                            'No activity yet.',
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textSecondary),
+                          );
+                        }
+                        return Column(
+                          children: audits
+                              .take(5)
+                              .map((a) => AuditTrailTile(audit: a))
+                              .toList(),
                         );
-                      }
-                      final audits = snap.data ?? [];
-                      if (audits.isEmpty) {
-                        return const Text(
-                          'No activity yet.',
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary),
-                        );
-                      }
-                      return Column(
-                        children: audits
-                            .take(5)
-                            .map((a) => AuditTrailTile(audit: a))
-                            .toList(),
-                      );
-                    },
-                  ),
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),

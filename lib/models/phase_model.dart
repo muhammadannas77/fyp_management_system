@@ -32,6 +32,8 @@ class PhaseModel {
   final String duration;
   final List<String> requirements;
   final String status;
+  final String? description;
+  final DateTime? deadline;
   final String? submissionText;
   final String? fileUrl;
   final String? fileName;
@@ -53,6 +55,11 @@ class PhaseModel {
   final String? reviewedBy;
   final bool unlocked;
 
+  final bool requireText;
+  final bool requireFile;
+  final bool requireImage;
+  final bool requireLink;
+
   PhaseModel({
     required this.id,
     required this.projectId,
@@ -61,6 +68,8 @@ class PhaseModel {
     required this.duration,
     required this.requirements,
     required this.status,
+    this.description,
+    this.deadline,
     this.submissionText,
     this.fileUrl,
     this.fileName,
@@ -81,6 +90,10 @@ class PhaseModel {
     this.reviewedAt,
     this.reviewedBy,
     required this.unlocked,
+    this.requireText = true,
+    this.requireFile = true,
+    this.requireImage = false,
+    this.requireLink = false,
   });
 
   factory PhaseModel.fromFirestore(DocumentSnapshot doc) {
@@ -93,6 +106,8 @@ class PhaseModel {
       duration: data['duration'] ?? '',
       requirements: List<String>.from(data['requirements'] ?? []),
       status: data['status'] ?? 'locked',
+      description: data['description'],
+      deadline: (data['deadline'] as Timestamp?)?.toDate(),
       submissionText: data['submissionText'],
       fileUrl: data['fileUrl'],
       fileName: data['fileName'],
@@ -113,6 +128,10 @@ class PhaseModel {
       reviewedAt: (data['reviewedAt'] as Timestamp?)?.toDate(),
       reviewedBy: data['reviewedBy'],
       unlocked: data['unlocked'] ?? false,
+      requireText: data['requireText'] ?? true,
+      requireFile: data['requireFile'] ?? true,
+      requireImage: data['requireImage'] ?? false,
+      requireLink: data['requireLink'] ?? false,
     );
   }
 
@@ -124,6 +143,8 @@ class PhaseModel {
       'duration': duration,
       'requirements': requirements,
       'status': status,
+      'description': description,
+      'deadline': deadline != null ? Timestamp.fromDate(deadline!) : null,
       'submissionText': submissionText,
       'fileUrl': fileUrl,
       'fileName': fileName,
@@ -144,6 +165,10 @@ class PhaseModel {
       'reviewedAt': reviewedAt != null ? Timestamp.fromDate(reviewedAt!) : null,
       'reviewedBy': reviewedBy,
       'unlocked': unlocked,
+      'requireText': requireText,
+      'requireFile': requireFile,
+      'requireImage': requireImage,
+      'requireLink': requireLink,
     };
   }
 
@@ -155,6 +180,8 @@ class PhaseModel {
     String? duration,
     List<String>? requirements,
     String? status,
+    String? description,
+    DateTime? deadline,
     String? submissionText,
     String? fileUrl,
     String? fileName,
@@ -175,6 +202,10 @@ class PhaseModel {
     DateTime? reviewedAt,
     String? reviewedBy,
     bool? unlocked,
+    bool? requireText,
+    bool? requireFile,
+    bool? requireImage,
+    bool? requireLink,
   }) {
     return PhaseModel(
       id: id ?? this.id,
@@ -184,6 +215,8 @@ class PhaseModel {
       duration: duration ?? this.duration,
       requirements: requirements ?? this.requirements,
       status: status ?? this.status,
+      description: description ?? this.description,
+      deadline: deadline ?? this.deadline,
       submissionText: submissionText ?? this.submissionText,
       fileUrl: fileUrl ?? this.fileUrl,
       fileName: fileName ?? this.fileName,
@@ -204,6 +237,10 @@ class PhaseModel {
       reviewedAt: reviewedAt ?? this.reviewedAt,
       reviewedBy: reviewedBy ?? this.reviewedBy,
       unlocked: unlocked ?? this.unlocked,
+      requireText: requireText ?? this.requireText,
+      requireFile: requireFile ?? this.requireFile,
+      requireImage: requireImage ?? this.requireImage,
+      requireLink: requireLink ?? this.requireLink,
     );
   }
 
