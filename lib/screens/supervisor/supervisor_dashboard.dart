@@ -164,20 +164,41 @@ class _SupervisorDashboardState extends State<SupervisorDashboard> {
   Widget _buildSupervisorHeader(UserModel user) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Card(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              CircleAvatar(
-                backgroundColor: AppColors.approved,
-                radius: 28,
-                child: Text(
-                  user.name.isNotEmpty ? user.name[0].toUpperCase() : 'S',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold),
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF3B82F6), AppColors.accent], // Blue to Teal
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    user.name.isNotEmpty ? user.name.substring(0, 2).toUpperCase() : 'S',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -187,23 +208,31 @@ class _SupervisorDashboardState extends State<SupervisorDashboard> {
                   children: [
                     Text(user.name,
                         style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
+                            fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
                     Text(user.email,
                         style: const TextStyle(
-                            fontSize: 12, color: AppColors.textSecondary)),
-                    const SizedBox(height: 4),
+                            fontSize: 13, color: AppColors.textSecondary)),
+                    const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 3),
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.approved.withValues(alpha: 0.1),
+                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
                       ),
-                      child: const Text('Supervisor',
-                          style: TextStyle(
-                              color: AppColors.approved,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600)),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.verified_user_outlined, size: 12, color: Color(0xFF10B981)),
+                          SizedBox(width: 4),
+                          Text('Supervisor',
+                              style: TextStyle(
+                                  color: Color(0xFF10B981),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -226,6 +255,37 @@ class _ProjectCard extends StatelessWidget {
     required this.userRepo,
     required this.phaseRepo,
   });
+
+  Widget _buildProjectDetailRow(IconData icon, String label, String value, Color valueColor, {bool isStatus = false}) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+        ),
+        if (isStatus)
+          Row(
+            children: [
+              Text(
+                value,
+                style: TextStyle(color: valueColor, fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.circle, size: 8, color: valueColor),
+            ],
+          )
+        else
+          Text(
+            value,
+            style: TextStyle(color: valueColor, fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -256,124 +316,117 @@ class _ProjectCard extends StatelessWidget {
                     orElse: () => phases.first,
                   )
                 : null;
-            final pendingReview = phases.where((p) => p.isSubmitted).length;
 
             final studentName = student?.name ?? 'Unknown Student';
-
             final phaseStatusLabel = currentPhase != null ? StatusHelper.getLabel(currentPhase.status) : 'No Phases';
-
             final phaseStatusColor = currentPhase != null ? StatusHelper.getColor(currentPhase.status) : Colors.grey;
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SupervisorReviewScreen(
-                              project: project,
-                              student: student,
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SupervisorReviewScreen(
+                                project: project,
+                                student: student,
+                              ),
                             ),
                           ),
-                        ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              project.title,
-                              style: const TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          if (pendingReview > 0)
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.error.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(20),
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(12),
                               ),
+                              child: const Icon(Icons.folder_open, color: Colors.white, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
                               child: Text(
-                                '$pendingReview pending',
+                                project.title,
                                 style: const TextStyle(
-                                    color: AppColors.error,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold),
+                                    fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
                               ),
                             ),
+                            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _buildProjectDetailRow(Icons.person, 'Student', studentName, AppColors.primary),
+                        const SizedBox(height: 12),
+                        _buildProjectDetailRow(Icons.layers, 'Current Phase', 'Phase ${project.currentPhase}', AppColors.primary),
+                        const SizedBox(height: 12),
+                        _buildProjectDetailRow(Icons.info_outline, 'Phase Status', phaseStatusLabel, phaseStatusColor, isStatus: true),
+                        if (currentPhase != null && currentPhase.submittedAt != null) ...[
+                          const SizedBox(height: 12),
+                          _buildProjectDetailRow(Icons.access_time, 'Last Submission', DateFormatter.format(currentPhase.submittedAt!), AppColors.primary),
                         ],
-                      ),
-                      const SizedBox(height: 10),
-                      InfoRow(
-                          icon: Icons.person,
-                          label: 'Student',
-                          value: studentName),
-                      InfoRow(
-                          icon: Icons.layers,
-                          label: 'Current Phase',
-                          value: 'Phase ${project.currentPhase}',
-                          valueColor: AppColors.primary),
-                      InfoRow(
-                          icon: Icons.info_outline,
-                          label: 'Phase Status',
-                          value: phaseStatusLabel,
-                          valueColor: phaseStatusColor),
-                      if (currentPhase != null && currentPhase.submittedAt != null)
-                        InfoRow(
-                            icon: Icons.access_time,
-                            label: 'Last Submission',
-                            value: DateFormatter.format(
-                                currentPhase.submittedAt)),
-                      const SizedBox(height: 8),
-                      // Phase progress chips
-                      if (phases.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8.0),
-                          child: Text(
+                        const SizedBox(height: 20),
+                        // Phase progress chips
+                        if (phases.isEmpty)
+                          const Text(
                             'No phases created yet.',
                             style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontStyle: FontStyle.italic,
                                 fontSize: 13),
+                          )
+                        else
+                          Row(
+                            children: phases.map((p) {
+                              final isActive = p.phaseNo == project.currentPhase;
+                              final isCompleted = p.phaseNo < project.currentPhase;
+
+                              Color bgColor = isActive ? const Color(0xFF3B82F6) : Colors.transparent;
+                              Color borderColor = isActive ? const Color(0xFF3B82F6) : (isCompleted ? const Color(0xFF93C5FD) : AppColors.divider);
+                              Color textColor = isActive ? Colors.white : (isCompleted ? const Color(0xFF3B82F6) : AppColors.textSecondary);
+
+                              return Container(
+                                width: 28,
+                                height: 28,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  color: bgColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: borderColor, width: 1),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${p.phaseNo}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           ),
-                        )
-                      else
-                        Wrap(
-                          spacing: 6,
-                          children: phases
-                                .map((p) => Container(
-                                      width: 28,
-                                      height: 28,
-                                      decoration: BoxDecoration(
-                                        color: StatusHelper.getColor(p.status)
-                                            .withValues(alpha: 0.2),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: StatusHelper.getColor(p.status),
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '${p.phaseNo}',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color:
-                                                StatusHelper.getColor(p.status),
-                                          ),
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

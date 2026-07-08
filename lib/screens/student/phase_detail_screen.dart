@@ -17,6 +17,7 @@ import '../../models/models.dart';
 import '../../widgets/widgets.dart';
 import '../../constants/app_constants.dart';
 import '../../utils/utils.dart';
+import '../../repositories/repositories.dart';
 
 import '../shared/comment_thread_screen.dart';
 
@@ -52,6 +53,51 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
   final _demoVideoCtrl = TextEditingController();
   final _finalLinkCtrl = TextEditingController();
 
+  final _userRepo = UserRepository();
+  String? _reviewerName;
+  String? _cachedReviewerId;
+
+  Widget _buildTimelineRow(IconData icon, String label, String value, {Color? iconColor}) {
+    final color = iconColor ?? AppColors.primary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          ),
+          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _fetchReviewerName(String uid) async {
+    try {
+      final user = await _userRepo.getUserById(uid);
+      if (mounted) {
+        setState(() {
+          _reviewerName = user?.name ?? 'Unknown Supervisor';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _reviewerName = 'Unknown Supervisor';
+        });
+      }
+    }
+  }
+
 
 
   @override
@@ -78,6 +124,10 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
   /// Purpose: Executes logic for _submit and handles state or UI updates.
   /// -----------------------------------------
   Future<void> _submit(PhaseModel phase) async {
+    final isGeneric = widget.project.phaseType == 'generic';
+    final isPhase4 = isGeneric && phase.phaseNo == 4;
+    final isPhase5 = isGeneric && phase.phaseNo == 5;
+
     if (phase.requireText && _submissionCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -86,6 +136,62 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
         ),
       );
       return;
+    }
+
+    if (isPhase4) {
+      final ghUrl = _githubCtrl.text.trim();
+      if (ghUrl.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('GitHub Repository Link is required.'), backgroundColor: AppColors.error));
+        return;
+      }
+      final ghUri = Uri.tryParse(ghUrl);
+      if (ghUri == null || !ghUri.isAbsolute || (ghUri.scheme != 'http' && ghUri.scheme != 'https')) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid GitHub URL (http/https).'), backgroundColor: AppColors.error));
+        return;
+      }
+      final prov = context.read<ProjectProvider>();
+      if (prov.selectedFile == null && phase.fileUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Documentation File is required.'), backgroundColor: AppColors.error));
+        return;
+      }
+      if (prov.selectedScreenshots.isEmpty && (phase.screenshots == null || phase.screenshots!.isEmpty)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Development Screenshots are required.'), backgroundColor: AppColors.error));
+        return;
+      }
+    }
+
+    if (isPhase5) {
+      final finalLink = _finalLinkCtrl.text.trim();
+      if (finalLink.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Final Application Link is required.'), backgroundColor: AppColors.error));
+        return;
+      }
+      final flUri = Uri.tryParse(finalLink);
+      if (flUri == null || !flUri.isAbsolute || (flUri.scheme != 'http' && flUri.scheme != 'https')) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid Application URL (http/https).'), backgroundColor: AppColors.error));
+        return;
+      }
+      final demoLink = _demoVideoCtrl.text.trim();
+      if (demoLink.isNotEmpty) {
+        final dmUri = Uri.tryParse(demoLink);
+        if (dmUri == null || !dmUri.isAbsolute || (dmUri.scheme != 'http' && dmUri.scheme != 'https')) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid Demonstration Video URL (http/https).'), backgroundColor: AppColors.error));
+          return;
+        }
+      }
+      final prov = context.read<ProjectProvider>();
+      if (prov.selectedFile == null && phase.fileUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Final Documentation is required.'), backgroundColor: AppColors.error));
+        return;
+      }
+      if (prov.presentationFile == null && phase.presentationUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Final Presentation is required.'), backgroundColor: AppColors.error));
+        return;
+      }
+      if (prov.testCasesFile == null && phase.testCasesUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Test Cases Document is required.'), backgroundColor: AppColors.error));
+        return;
+      }
     }
 
     final user = context.read<AuthProvider>().currentUser!;
@@ -101,10 +207,10 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
       supervisorId: widget.project.supervisorId,
       studentName: user.name,
       isResubmission: isResubmission,
-      githubUrl: phase.requireLink ? _githubCtrl.text.trim() : null,
+      githubUrl: isPhase4 ? _githubCtrl.text.trim() : (phase.requireLink ? _githubCtrl.text.trim() : null),
       existingScreenshots: phase.screenshots,
-      demoVideoUrl: null,
-      finalProjectLink: null,
+      demoVideoUrl: isPhase5 ? _demoVideoCtrl.text.trim() : null,
+      finalProjectLink: isPhase5 ? _finalLinkCtrl.text.trim() : null,
     );
 
     if (!mounted) return;
@@ -180,6 +286,16 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
           )
         : widget.phase;
 
+    final isGeneric = widget.project.phaseType == 'generic';
+    final isPhase4 = isGeneric && phase.phaseNo == 4;
+    final isPhase5 = isGeneric && phase.phaseNo == 5;
+
+    if (phase.reviewedBy != null && phase.reviewedBy != _cachedReviewerId) {
+      _cachedReviewerId = phase.reviewedBy;
+      _reviewerName = 'Loading...';
+      _fetchReviewerName(phase.reviewedBy!);
+    }
+
     final canSubmit = phase.isPendingSubmission || phase.isChangesRequested;
 
     return LoadingOverlay(
@@ -211,75 +327,66 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Status + Info Card ──────────────────────────────────────
-              Card(
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: StatusHelper.getColor(phase.status).withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${phase.phaseNo}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: StatusHelper.getColor(phase.status),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               phase.title,
                               style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
+                                  fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
                             ),
                           ),
                           StatusBadge(status: phase.status),
                         ],
                       ),
-                      const Divider(height: 20),
-                      if (phase.duration.isNotEmpty)
-                        InfoRow(
-                            icon: Icons.schedule,
-                            label: 'Duration',
-                            value: phase.duration),
-                      if (phase.deadline != null)
-                        InfoRow(
-                            icon: Icons.calendar_today,
-                            label: 'Deadline',
-                            value: DateFormatter.formatDate(phase.deadline!)),
+                      const SizedBox(height: 20),
+                      const Divider(height: 1, color: AppColors.divider),
+                      const SizedBox(height: 20),
                       if (phase.submittedAt != null)
-                        InfoRow(
-                          icon: Icons.upload,
-                          label: 'Submitted',
-                          value: DateFormatter.format(phase.submittedAt),
-                        ),
-                      if (phase.resubmittedAt != null)
-                        InfoRow(
-                          icon: Icons.replay,
-                          label: 'Resubmitted',
-                          value: DateFormatter.format(phase.resubmittedAt),
-                        ),
+                        _buildTimelineRow(Icons.arrow_upward, 'Submitted', DateFormatter.format(phase.submittedAt!), iconColor: AppColors.primary),
                       if (phase.approvedAt != null)
-                        InfoRow(
-                          icon: Icons.check_circle,
-                          label: 'Approved',
-                          value: DateFormatter.format(phase.approvedAt),
-                          valueColor: AppColors.approved,
-                        ),
+                        _buildTimelineRow(Icons.check_circle_outline, 'Approved', DateFormatter.format(phase.approvedAt!), iconColor: const Color(0xFF10B981)),
                       if (phase.changesRequestedAt != null)
-                        InfoRow(
-                          icon: Icons.edit_note,
-                          label: 'Changes Requested',
-                          value:
-                              DateFormatter.format(phase.changesRequestedAt),
-                          valueColor: AppColors.changesRequested,
-                        ),
-                      if (phase.reviewedBy != null)
-                        InfoRow(
-                          icon: Icons.person_outline,
-                          label: 'Reviewed By',
-                          value: phase.reviewedBy!,
-                        ),
+                        _buildTimelineRow(Icons.warning_amber_rounded, 'Changes Requested', DateFormatter.format(phase.changesRequestedAt!), iconColor: const Color(0xFFF59E0B)),
+                      if (phase.resubmittedAt != null)
+                        _buildTimelineRow(Icons.replay, 'Resubmitted', DateFormatter.format(phase.resubmittedAt!), iconColor: const Color(0xFF3B82F6)),
                       if (phase.reviewDuration != null)
-                        InfoRow(
-                          icon: Icons.timer_outlined,
-                          label: 'Review Time',
-                          value:
-                              DateFormatter.formatDuration(phase.reviewDuration!),
-                        ),
+                        _buildTimelineRow(Icons.timer_outlined, 'Review Time', DateFormatter.formatDuration(phase.reviewDuration!), iconColor: const Color(0xFF3B82F6)),
                     ],
                   ),
                 ),
@@ -289,7 +396,27 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
               // ── Change Request Banner ───────────────────────────────────
               if (phase.isChangesRequested &&
                   phase.changeRequestReason != null)
-                _ChangeRequestBanner(reason: phase.changeRequestReason!),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFECACA)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.chat_bubble_outline, color: Color(0xFFEF4444), size: 18),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          phase.changeRequestReason!,
+                          style: const TextStyle(fontSize: 13, color: Color(0xFFEF4444), height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (phase.isChangesRequested) const SizedBox(height: 8),
 
               // ── Requirements Card ───────────────────────────────────────
@@ -356,66 +483,91 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                 ),
               const SizedBox(height: 8),
 
+              // ── Existing Submitted Text ─────────────────────────────────
+              if (phase.submissionText != null && phase.submissionText!.isNotEmpty && !canSubmit) ...[
+                const Text(
+                  'Submission Notes',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    phase.submissionText!,
+                    style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.primary),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // ── Existing Submitted File ─────────────────────────────────
-              if (phase.fileUrl != null || phase.fileName != null)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              if (phase.fileUrl != null || phase.fileName != null) ...[
+                if (phase.fileUrl != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
                       children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.attach_file,
-                                color: AppColors.primary, size: 20),
-                            SizedBox(width: 8),
-                            Text('Submitted File',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15)),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        FileAttachmentRow(
-                          fileName: phase.fileName ?? 'Attached file',
-                          fileUrl: phase.fileUrl,
-                        ),
-                        const SizedBox(height: 10),
-                        if (phase.fileUrl != null)
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: () => _openFile(phase.fileUrl!),
-                              icon: const Icon(Icons.open_in_new, size: 16),
-                              label: const Text('Open File'),
-                            ),
-                          )
-                        else
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.error_outline, size: 20, color: AppColors.error),
-                                const SizedBox(width: 8),
-                                const Expanded(
-                                  child: Text(
-                                    'File not uploaded yet',
-                                    style: TextStyle(color: AppColors.error, fontSize: 13),
-                                  ),
-                                ),
-                              ],
-                            ),
+                        const Icon(Icons.attach_file, size: 20, color: AppColors.textSecondary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            phase.fileName ?? 'Submitted file',
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton.icon(
+                          onPressed: () => _openFile(phase.fileUrl!),
+                          icon: const Icon(Icons.open_in_new, size: 14, color: Colors.white),
+                          label: const Text('Open', style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                            elevation: 0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, size: 20, color: AppColors.error),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'File not uploaded yet',
+                            style: TextStyle(color: AppColors.error, fontSize: 13),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ),
-              if (phase.fileUrl != null || phase.fileName != null) const SizedBox(height: 8),
+                const SizedBox(height: 8),
+              ],
 
               // ── Submitted Phase 4 Details ────────────────────────────────
               if (phase.phaseNo == 4 && (phase.githubUrl != null || (phase.screenshots != null && phase.screenshots!.isNotEmpty)))
@@ -608,7 +760,172 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                           ),
                           const SizedBox(height: 14),
                         ],
-                        if (phase.requireLink) ...[
+                        if (isPhase4) ...[
+                          TextField(
+                            controller: _githubCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'GitHub Repository Link *',
+                              hintText: 'https://github.com/username/repo',
+                              prefixIcon: Icon(Icons.link),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Consumer<ProjectProvider>(
+                            builder: (_, prov, __) => Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Development Screenshots *', style: TextStyle(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 8),
+                                if (prov.selectedScreenshots.isNotEmpty)
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: List.generate(prov.selectedScreenshots.length, (index) {
+                                      return Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          Container(
+                                            width: 80,
+                                            height: 80,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade200,
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: Colors.grey.shade400),
+                                            ),
+                                            child: const Center(child: Icon(Icons.image, color: Colors.grey)),
+                                          ),
+                                          Positioned(
+                                            right: -8,
+                                            top: -8,
+                                            child: InkWell(
+                                              onTap: () => prov.removeScreenshot(index),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(2),
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.red,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }),
+                                  ),
+                                const SizedBox(height: 8),
+                                OutlinedButton.icon(
+                                  onPressed: prov.loading ? null : prov.pickScreenshots,
+                                  icon: const Icon(Icons.add_photo_alternate, size: 18),
+                                  label: const Text('Upload Images (JPG, PNG)'),
+                                ),
+                                const SizedBox(height: 14),
+                                if (prov.selectedFile != null) ...[
+                                  FileAttachmentRow(
+                                    fileName: prov.selectedFile!.name,
+                                    showRemove: true,
+                                    onRemove: prov.clearSelectedFile,
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: prov.loading ? null : prov.pickFile,
+                                    icon: const Icon(Icons.attach_file, size: 18),
+                                    label: Text(prov.selectedFile != null
+                                        ? 'Change File'
+                                        : 'Attach Documentation (PDF, Word) *'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        if (isPhase5) ...[
+                          TextField(
+                            controller: _demoVideoCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Demonstration Video (Optional)',
+                              hintText: 'YouTube or Google Drive URL',
+                              prefixIcon: Icon(Icons.video_library),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          TextField(
+                            controller: _finalLinkCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Application Link (APK / Web URL) *',
+                              hintText: 'https://...',
+                              prefixIcon: Icon(Icons.link),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Consumer<ProjectProvider>(
+                            builder: (_, prov, __) => Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (prov.selectedFile != null) ...[
+                                  FileAttachmentRow(
+                                    fileName: prov.selectedFile!.name,
+                                    showRemove: true,
+                                    onRemove: prov.clearSelectedFile,
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: prov.loading ? null : prov.pickFile,
+                                    icon: const Icon(Icons.attach_file, size: 18),
+                                    label: Text(prov.selectedFile != null
+                                        ? 'Change Documentation'
+                                        : 'Final Documentation (PDF/DOC) *'),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                if (prov.presentationFile != null) ...[
+                                  FileAttachmentRow(
+                                    fileName: prov.presentationFile!.name,
+                                    showRemove: true,
+                                    onRemove: prov.clearPresentationFile,
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: prov.loading ? null : prov.pickPresentationFile,
+                                    icon: const Icon(Icons.slideshow, size: 18),
+                                    label: Text(prov.presentationFile != null
+                                        ? 'Change Presentation'
+                                        : 'Final Presentation (PPT/PPTX) *'),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                if (prov.testCasesFile != null) ...[
+                                  FileAttachmentRow(
+                                    fileName: prov.testCasesFile!.name,
+                                    showRemove: true,
+                                    onRemove: prov.clearTestCasesFile,
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: prov.loading ? null : prov.pickTestCasesFile,
+                                    icon: const Icon(Icons.fact_check, size: 18),
+                                    label: Text(prov.testCasesFile != null
+                                        ? 'Change Test Cases'
+                                        : 'Test Cases Document (PDF/DOC) *'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        if (!isPhase4 && !isPhase5 && phase.requireLink) ...[
                           TextField(
                             controller: _githubCtrl,
                             decoration: const InputDecoration(
@@ -619,7 +936,7 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                           ),
                           const SizedBox(height: 14),
                         ],
-                        if (phase.requireImage) ...[
+                        if (!isPhase4 && !isPhase5 && phase.requireImage) ...[
                           Consumer<ProjectProvider>(
                             builder: (_, prov, __) => Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -674,7 +991,7 @@ class _PhaseDetailScreenState extends State<PhaseDetailScreen> {
                           ),
                           const SizedBox(height: 14),
                         ],
-                        if (phase.requireFile) ...[
+                        if (!isPhase4 && !isPhase5 && phase.requireFile) ...[
                           Consumer<ProjectProvider>(
                             builder: (_, prov, __) => Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

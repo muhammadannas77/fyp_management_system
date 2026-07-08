@@ -50,7 +50,6 @@ class StatusBadge extends StatelessWidget {
   }
 }
 
-// ─── Phase Progress Card ──────────────────────────────────────────────────────
 class PhaseProgressCard extends StatelessWidget {
   final PhaseModel phase;
   final bool isCurrent;
@@ -66,21 +65,22 @@ class PhaseProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = StatusHelper.getColor(phase.status);
-    return Card(
-      elevation: isCurrent ? 4 : 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: isCurrent
-            /// -----------------------------------------
-            /// Method: BorderSide
-            /// Purpose: Executes logic for BorderSide and handles state or UI updates.
-            /// -----------------------------------------
-            ? const BorderSide(color: AppColors.primary, width: 2)
-            : BorderSide.none,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: isCurrent ? Border.all(color: AppColors.primary, width: 1.5) : Border.all(color: AppColors.divider, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: InkWell(
         onTap: phase.isLocked ? null : onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -94,11 +94,7 @@ class PhaseProgressCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: phase.isLocked
-                      /// -----------------------------------------
-                      /// Method: Icon
-                      /// Purpose: Executes logic for Icon and handles state or UI updates.
-                      /// -----------------------------------------
-                      ? Icon(Icons.lock, color: color, size: 20)
+                      ? Icon(Icons.lock_outline, color: color, size: 20)
                       : Text(
                           '${phase.phaseNo}',
                           style: TextStyle(
@@ -109,38 +105,48 @@ class PhaseProgressCard extends StatelessWidget {
                         ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Phase ${phase.phaseNo}: ${phase.title}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        // Add a zero-width space after normal spaces to prevent Flutter from splitting words mid-line
+                        phase.title.replaceAll(' ', ' \u200B'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: AppColors.primary,
+                        ),
+                        softWrap: true,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      phase.duration,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                    if (phase.submittedAt != null) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
+                    if (phase.submittedAt != null)
                       Text(
                         'Submitted: ${DateFormatter.format(phase.submittedAt)}',
                         style: const TextStyle(
-                            fontSize: 11, color: AppColors.textSecondary),
+                            fontSize: 12, color: AppColors.textSecondary),
+                      )
+                    else
+                      Text(
+                        phase.duration,
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary),
                       ),
-                    ],
                   ],
                 ),
               ),
-              StatusBadge(status: phase.status),
+            ),
+            StatusBadge(status: phase.status),
+            if (!phase.isLocked) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+              ],
             ],
           ),
         ),
@@ -301,21 +307,21 @@ class AuditTrailTile extends StatelessWidget {
   IconData _getIcon() {
     switch (audit.action) {
       case 'phase_submitted':
-        return Icons.upload_file;
+        return Icons.upload_file_outlined;
       case 'phase_resubmitted':
-        return Icons.replay;
+        return Icons.replay_outlined;
       case 'phase_approved':
-        return Icons.check_circle;
+        return Icons.check_circle_outline;
       case 'changes_requested':
-        return Icons.edit_note;
+        return Icons.edit_note_outlined;
       case 'phase_unlocked':
-        return Icons.lock_open;
+        return Icons.lock_open_outlined;
       case 'project_created':
-        return Icons.create_new_folder;
+        return Icons.create_new_folder_outlined;
       case 'comment_added':
-        return Icons.comment;
+        return Icons.comment_outlined;
       default:
-        return Icons.history;
+        return Icons.history_outlined;
     }
   }
 
@@ -527,18 +533,18 @@ class NotificationTile extends StatelessWidget {
   IconData _getIcon() {
     switch (notification.type) {
       case 'phase_approved':
-        return Icons.check_circle;
+        return Icons.check_circle_outline;
       case 'changes_requested':
-        return Icons.edit_note;
+        return Icons.edit_note_outlined;
       case 'phase_submitted':
       case 'phase_resubmitted':
-        return Icons.upload_file;
+        return Icons.upload_file_outlined;
       case 'phase_unlocked':
-        return Icons.lock_open;
+        return Icons.lock_open_outlined;
       case 'project_created':
-        return Icons.create_new_folder;
+        return Icons.create_new_folder_outlined;
       default:
-        return Icons.notifications;
+        return Icons.notifications_outlined;
     }
   }
 

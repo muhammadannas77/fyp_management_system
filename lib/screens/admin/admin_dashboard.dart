@@ -56,6 +56,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Admin Dashboard'),
         actions: [
           Stack(
@@ -110,19 +111,34 @@ class _AdminDashboardState extends State<AdminDashboard> {
           children: [
             // Admin header
             Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: AppColors.divider, width: 1),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      backgroundColor: AppColors.changesRequested,
-                      radius: 26,
-                      child: Text(
-                        avatarInitial,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold),
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [AppColors.accent, Color(0xFF3B82F6)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          avatarInitial,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -132,40 +148,50 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         children: [
                           Text(displayName,
                               style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                                  fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                          const SizedBox(height: 2),
                           Text(user.email,
                               style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 13,
                                   color: AppColors.textSecondary)),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.verified_user_outlined, color: AppColors.accent, size: 14),
+                                const SizedBox(width: 4),
+                                const Text('Admin',
+                                    style: TextStyle(
+                                        color: AppColors.accent,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.changesRequested.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text('Admin',
-                          style: TextStyle(
-                              color: AppColors.changesRequested,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            const SectionHeader(title: 'Overview'),
+            const SizedBox(height: 20),
+            const Text('Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const SizedBox(height: 12),
             // Stats grid
             LayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
                 final crossAxisCount = width > 600 ? 4 : 2;
                 final itemWidth = (width - ((crossAxisCount - 1) * 12)) / crossAxisCount;
-                final aspectRatio = itemWidth / 160; // Base height of 160
+                final aspectRatio = itemWidth / 164; // Base height to match mockup proportions and prevent overflow
                 return GridView.count(
                   crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 12,
@@ -174,41 +200,41 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   physics: const NeverScrollableScrollPhysics(),
                   childAspectRatio: aspectRatio,
                   children: [
-                    StatsCard(
+                    _AdminStatCard(
                       title: 'Total Users',
                       value: '${admin.allUsers.length}',
-                      icon: Icons.people,
-                      color: AppColors.primary,
+                      icon: Icons.people_outline,
+                      iconColor: const Color(0xFF3B82F6),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const UserManagementScreen()),
                       ),
                     ),
-                    StatsCard(
+                    _AdminStatCard(
                       title: 'Students',
                       value: '${admin.totalStudents}',
-                      icon: Icons.person,
-                      color: AppColors.primaryLight,
+                      icon: Icons.school_outlined,
+                      iconColor: AppColors.accent,
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const UserManagementScreen(initialTabIndex: 0)),
                       ),
                     ),
-                    StatsCard(
+                    _AdminStatCard(
                       title: 'Supervisors',
                       value: '${admin.totalSupervisors}',
-                      icon: Icons.supervisor_account,
-                      color: AppColors.approved,
+                      icon: Icons.person_outline,
+                      iconColor: const Color(0xFF8B5CF6),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const UserManagementScreen(initialTabIndex: 1)),
                       ),
                     ),
-                    StatsCard(
+                    _AdminStatCard(
                       title: 'Projects',
                       value: '${admin.totalProjects}',
-                      icon: Icons.folder_open,
-                      color: AppColors.pendingSubmission,
+                      icon: Icons.folder_outlined,
+                      iconColor: const Color(0xFFF59E0B),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const ProjectManagementScreen()),
@@ -218,14 +244,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 );
               },
             ),
-            const SizedBox(height: 8),
-            const SectionHeader(title: 'Management'),
+            const SizedBox(height: 20),
+            const Text('Management', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const SizedBox(height: 12),
             // Action cards
             _ActionCard(
               title: 'User Management',
               subtitle: 'Add, view, and manage students & supervisors',
-              icon: Icons.manage_accounts,
-              color: AppColors.primary,
+              icon: Icons.manage_accounts_outlined,
+              iconColor: const Color(0xFF3B82F6),
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const UserManagementScreen()),
@@ -234,8 +261,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
             _ActionCard(
               title: 'Project Management',
               subtitle: 'Create projects, assign supervisors, track progress',
-              icon: Icons.folder_special,
-              color: AppColors.approved,
+              icon: Icons.folder_special_outlined,
+              iconColor: AppColors.accent,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -245,31 +272,164 @@ class _AdminDashboardState extends State<AdminDashboard> {
             const SizedBox(height: 8),
             // Recent projects
             if (admin.projects.isNotEmpty) ...[
-              const SectionHeader(title: 'Recent Projects'),
-              ...admin.projects.take(5).map(
-                    (p) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const CircleAvatar(
-                          backgroundColor: AppColors.primary,
-                          child: Icon(Icons.folder, color: Colors.white, size: 20),
-                        ),
-                        title: Text(p.title,
-                            style: const TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w600)),
-                        subtitle: Text('Phase ${p.currentPhase} • ${p.status}',
-                            style: const TextStyle(fontSize: 12)),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => ProjectHistoryScreen(projectId: p.id)),
-                        ),
-                      ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Recent Projects', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProjectManagementScreen()),
+                      );
+                    },
+                    child: Row(
+                      children: const [
+                        Text('View All', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600, fontSize: 13)),
+                        SizedBox(width: 4),
+                        Icon(Icons.chevron_right, size: 16, color: AppColors.accent),
+                      ],
                     ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...admin.projects.take(5).map(
+                    (p) {
+                      final isCompleted = p.status.toLowerCase() == 'completed' || p.status.toLowerCase() == 'approved';
+                      return Card(
+                        elevation: 0,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(color: AppColors.divider, width: 1),
+                        ),
+                        child: InkWell(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => ProjectHistoryScreen(projectId: p.id)),
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                const CircleAvatar(
+                                  backgroundColor: AppColors.primary,
+                                  radius: 20,
+                                  child: Icon(Icons.folder, color: Colors.white, size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(p.title,
+                                          style: const TextStyle(
+                                              fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis),
+                                      const SizedBox(height: 4),
+                                      Text('Phase ${p.currentPhase} • ${p.status.toLowerCase()}',
+                                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isCompleted ? Colors.green.withValues(alpha: 0.1) : const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    isCompleted ? 'Completed' : 'Active',
+                                    style: TextStyle(
+                                      color: isCompleted ? Colors.green : const Color(0xFF3B82F6),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminStatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _AdminStatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.divider, width: 1),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 24),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -280,24 +440,29 @@ class _ActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final Color color;
+  final Color iconColor;
   final VoidCallback onTap;
 
   const _ActionCard({
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.color,
+    required this.iconColor,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.divider, width: 1),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -305,23 +470,23 @@ class _ActionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: iconColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 28),
+                child: Icon(icon, color: iconColor, size: 24),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title,
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold)),
+                            fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                     const SizedBox(height: 4),
                     Text(subtitle,
                         style: const TextStyle(
-                            fontSize: 12, color: AppColors.textSecondary)),
+                            fontSize: 13, color: AppColors.textSecondary)),
                   ],
                 ),
               ),

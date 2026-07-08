@@ -512,7 +512,6 @@ class _SupervisorReviewScreenState extends State<SupervisorReviewScreen> {
   }
 }
 
-// ─── Student Info Card ────────────────────────────────────────────────────────
 class _StudentInfoCard extends StatelessWidget {
   final UserModel student;
   final ProjectModel project;
@@ -529,63 +528,82 @@ class _StudentInfoCard extends StatelessWidget {
     final approvedCount = phases.where((p) => p.isApproved).length;
     final submittedCount = phases.where((p) => p.isSubmitted).length;
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: AppColors.primary,
-                  radius: 22,
-                  child: Text(
-                    student.name.isNotEmpty
-                        ? student.name[0].toUpperCase()
-                        : 'S',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      student.name.isNotEmpty
+                          ? student.name[0].toUpperCase()
+                          : 'S',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(student.name,
                           style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold)),
+                              fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
                       Text(student.email,
                           style: const TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary)),
+                              fontSize: 13, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
               ],
             ),
-            const Divider(height: 20),
+            const SizedBox(height: 20),
+            const Divider(height: 1, color: AppColors.divider),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                     child: _MiniStat(
                         label: 'Current Phase',
                         value: '${project.currentPhase}/${phases.length}',
-                        color: AppColors.primary)),
+                        color: const Color(0xFF3B82F6))),
+                Container(width: 1, height: 40, color: AppColors.divider),
                 Expanded(
                     child: _MiniStat(
                         label: 'Approved',
                         value: '$approvedCount',
-                        color: AppColors.approved)),
+                        color: const Color(0xFF10B981))),
+                Container(width: 1, height: 40, color: AppColors.divider),
                 Expanded(
                     child: _MiniStat(
                         label: 'Pending Review',
                         value: '$submittedCount',
-                        color: submittedCount > 0
-                            ? AppColors.error
-                            : AppColors.textSecondary)),
+                        color: const Color(0xFFF59E0B))),
               ],
             ),
           ],
@@ -609,10 +627,11 @@ class _MiniStat extends StatelessWidget {
       children: [
         Text(value,
             style: TextStyle(
-                fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+                fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+        const SizedBox(height: 4),
         Text(label,
             style:
-                const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             textAlign: TextAlign.center),
       ],
     );
@@ -661,6 +680,30 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
     }
   }
 
+  Widget _buildTimelineRow(IconData icon, String label, String value, {Color? iconColor}) {
+    final color = iconColor ?? AppColors.primary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          ),
+          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final phase = widget.phase;
@@ -675,46 +718,53 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                 ? AppColors.changesRequested
                 : AppColors.divider;
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor, width: isActionable ? 1.5 : 1),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: isActionable ? 1.5 : 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           // Header - always visible
           InkWell(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             onTap: isEffectivelyLocked
                 ? null
                 : () => setState(() => _expanded = !_expanded),
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   Container(
                     width: 36,
                     height: 36,
-                    decoration: BoxDecoration(
-                      color: StatusHelper.getColor(phase.status)
-                          .withValues(alpha: 0.12),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEFF6FF), // soft blue
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: isEffectivelyLocked
-                          ? Icon(Icons.lock,
+                          ? const Icon(Icons.lock,
                               size: 16,
-                              color: StatusHelper.getColor(phase.status))
+                              color: Color(0xFF3B82F6))
                           : Text(
                               '${phase.phaseNo}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: StatusHelper.getColor(phase.status),
+                                color: Color(0xFF3B82F6),
                               ),
                             ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,20 +772,37 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                         Text(
                           phase.title,
                           style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600),
+                              fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.primary),
                         ),
                         if (phase.submittedAt != null)
-                          Text(
-                            'Submitted: ${DateFormatter.format(phase.submittedAt)}',
-                            style: const TextStyle(
-                                fontSize: 11, color: AppColors.textSecondary),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              'Submitted: ${DateFormatter.format(phase.submittedAt)}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: AppColors.textSecondary),
+                            ),
                           ),
                       ],
                     ),
                   ),
-                  StatusBadge(status: phase.status),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: StatusHelper.getColor(phase.status).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      StatusHelper.getLabel(phase.status),
+                      style: TextStyle(
+                        color: StatusHelper.getColor(phase.status),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                   if (!isEffectivelyLocked) ...[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 8),
                     Icon(
                       _expanded
                           ? Icons.keyboard_arrow_up
@@ -750,51 +817,29 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
 
           // Expandable content
           if (_expanded && !phase.isLocked) ...[
-            const Divider(height: 1),
+            const Divider(height: 1, color: AppColors.divider),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Timestamps row
                   if (phase.submittedAt != null)
-                    InfoRow(
-                      icon: Icons.upload,
-                      label: 'Submitted',
-                      value: DateFormatter.format(phase.submittedAt),
-                    ),
+                    _buildTimelineRow(Icons.arrow_upward, 'Submitted', DateFormatter.format(phase.submittedAt!), iconColor: AppColors.primary),
                   if (phase.approvedAt != null)
-                    InfoRow(
-                      icon: Icons.check_circle,
-                      label: 'Approved',
-                      value: DateFormatter.format(phase.approvedAt),
-                      valueColor: AppColors.approved,
-                    ),
+                    _buildTimelineRow(Icons.check_circle_outline, 'Approved', DateFormatter.format(phase.approvedAt!), iconColor: const Color(0xFF10B981)),
                   if (phase.changesRequestedAt != null)
-                    InfoRow(
-                      icon: Icons.edit_note,
-                      label: 'Changes Requested',
-                      value: DateFormatter.format(phase.changesRequestedAt),
-                      valueColor: AppColors.changesRequested,
-                    ),
+                    _buildTimelineRow(Icons.warning_amber_rounded, 'Changes Requested', DateFormatter.format(phase.changesRequestedAt!), iconColor: const Color(0xFFF59E0B)),
                   if (phase.resubmittedAt != null)
-                    InfoRow(
-                      icon: Icons.replay,
-                      label: 'Resubmitted',
-                      value: DateFormatter.format(phase.resubmittedAt),
-                    ),
+                    _buildTimelineRow(Icons.replay, 'Resubmitted', DateFormatter.format(phase.resubmittedAt!), iconColor: const Color(0xFF3B82F6)),
                   if (phase.reviewDuration != null)
-                    InfoRow(
-                      icon: Icons.timer,
-                      label: 'Review Time',
-                      value:
-                          DateFormatter.formatDuration(phase.reviewDuration!),
-                    ),
+                    _buildTimelineRow(Icons.timer_outlined, 'Review Time', DateFormatter.formatDuration(phase.reviewDuration!), iconColor: const Color(0xFF3B82F6)),
+
+                  const SizedBox(height: 8),
 
                   // Submission notes
                   if (phase.submissionText != null &&
                       phase.submissionText!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
                     Text(
                       phase.phaseNo == 4
                           ? 'Development Summary'
@@ -804,53 +849,68 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                           fontSize: 13,
                           color: AppColors.textSecondary),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.divider),
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         phase.submissionText!,
-                        style: const TextStyle(fontSize: 13, height: 1.5),
+                        style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.primary),
                       ),
                     ),
                   ],
 
                   // Attached file
                   if (phase.fileUrl != null || phase.fileName != null) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     if (phase.fileUrl != null)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FileAttachmentRow(
-                              fileName: phase.fileName ?? 'Submitted file',
-                              fileUrl: phase.fileUrl,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.attach_file, size: 20, color: AppColors.textSecondary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                phase.fileName ?? 'Submitted file',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: () => widget.onOpenFile(phase.fileUrl!),
-                            icon: const Icon(Icons.open_in_new, size: 14),
-                            label: const Text('Open'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              textStyle: const TextStyle(fontSize: 12),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () => widget.onOpenFile(phase.fileUrl!),
+                              icon: const Icon(Icons.open_in_new, size: 14, color: Colors.white),
+                              label: const Text('Open', style: TextStyle(color: Colors.white)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                elevation: 0,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       )
                     else
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                               color: AppColors.error.withValues(alpha: 0.3)),
                         ),
@@ -873,16 +933,16 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                   // GitHub Link
                   if (phase.githubUrl != null &&
                       phase.githubUrl!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     const Text('GitHub Repository',
                         style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     InkWell(
                       onTap: () => widget.onOpenFile(phase.githubUrl!),
                       child: Text(phase.githubUrl!,
                           style: const TextStyle(
-                              color: Colors.blue,
+                              color: Color(0xFF3B82F6),
                               decoration: TextDecoration.underline)),
                     ),
                   ],
@@ -890,7 +950,7 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                   // Screenshots
                   if (phase.screenshots != null &&
                       phase.screenshots!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     const Text('Screenshots',
                         style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 13)),
@@ -926,131 +986,152 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
                   // Phase 5 Deliverables
                   if (phase.demoVideoUrl != null &&
                       phase.demoVideoUrl!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     const Text('Demo Video Link',
                         style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     InkWell(
                       onTap: () => widget.onOpenFile(phase.demoVideoUrl!),
                       child: Text(phase.demoVideoUrl!,
                           style: const TextStyle(
-                              color: Colors.blue,
+                              color: Color(0xFF3B82F6),
                               decoration: TextDecoration.underline)),
                     ),
                   ],
                   if (phase.finalProjectLink != null &&
                       phase.finalProjectLink!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     const Text('Final Project Link',
                         style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     InkWell(
                       onTap: () => widget.onOpenFile(phase.finalProjectLink!),
                       child: Text(phase.finalProjectLink!,
                           style: const TextStyle(
-                              color: Colors.blue,
+                              color: Color(0xFF3B82F6),
                               decoration: TextDecoration.underline)),
                     ),
                   ],
-                  if (phase.presentationUrl != null ||
-                      phase.presentationName != null) ...[
-                    const SizedBox(height: 10),
+                  if (phase.presentationUrl != null || phase.presentationName != null) ...[
+                    const SizedBox(height: 16),
                     if (phase.presentationUrl != null)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FileAttachmentRow(
-                              fileName:
-                                  phase.presentationName ?? 'Presentation',
-                              fileUrl: phase.presentationUrl,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.slideshow, size: 20, color: AppColors.textSecondary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                phase.presentationName ?? 'Presentation',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: () =>
-                                widget.onOpenFile(phase.presentationUrl!),
-                            icon: const Icon(Icons.open_in_new, size: 14),
-                            label: const Text('Open'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              textStyle: const TextStyle(fontSize: 12),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () => widget.onOpenFile(phase.presentationUrl!),
+                              icon: const Icon(Icons.open_in_new, size: 14, color: Colors.white),
+                              label: const Text('Open', style: TextStyle(color: Colors.white)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                elevation: 0,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       )
                     else
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: AppColors.error.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline,
-                                size: 20, color: AppColors.error),
+                            const Icon(Icons.error_outline, size: 20, color: AppColors.error),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '${phase.presentationName} (File not uploaded yet)',
-                                style: const TextStyle(
-                                    color: AppColors.error, fontSize: 13),
+                                style: const TextStyle(color: AppColors.error, fontSize: 13),
                               ),
                             ),
                           ],
                         ),
                       ),
                   ],
-                  if (phase.testCasesUrl != null ||
-                      phase.testCasesName != null) ...[
-                    const SizedBox(height: 10),
+                  if (phase.testCasesUrl != null || phase.testCasesName != null) ...[
+                    const SizedBox(height: 16),
                     if (phase.testCasesUrl != null)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FileAttachmentRow(
-                              fileName: phase.testCasesName ?? 'Test Cases',
-                              fileUrl: phase.testCasesUrl,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.assignment_turned_in, size: 20, color: AppColors.textSecondary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                phase.testCasesName ?? 'Test Cases',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: () =>
-                                widget.onOpenFile(phase.testCasesUrl!),
-                            icon: const Icon(Icons.open_in_new, size: 14),
-                            label: const Text('Open'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              textStyle: const TextStyle(fontSize: 12),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () => widget.onOpenFile(phase.testCasesUrl!),
+                              icon: const Icon(Icons.open_in_new, size: 14, color: Colors.white),
+                              label: const Text('Open', style: TextStyle(color: Colors.white)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                elevation: 0,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       )
                     else
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: AppColors.error.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline,
-                                size: 20, color: AppColors.error),
+                            const Icon(Icons.error_outline, size: 20, color: AppColors.error),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '${phase.testCasesName} (File not uploaded yet)',
-                                style: const TextStyle(
-                                    color: AppColors.error, fontSize: 13),
+                                style: const TextStyle(color: AppColors.error, fontSize: 13),
                               ),
                             ),
                           ],
@@ -1060,29 +1141,27 @@ class _PhaseReviewCardState extends State<_PhaseReviewCard> {
 
                   // Previous change request reason
                   if (phase.changeRequestReason != null) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color:
-                            AppColors.changesRequested.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color: AppColors.changesRequested
-                                .withValues(alpha: 0.3)),
+                        color: const Color(0xFFFEF2F2), // Subtle red
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFECACA)),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.feedback_outlined,
-                              color: AppColors.changesRequested, size: 16),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.chat_bubble_outline,
+                              color: Color(0xFFEF4444), size: 18),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               phase.changeRequestReason!,
                               style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.changesRequested),
+                                  fontSize: 13,
+                                  color: Color(0xFFEF4444),
+                                  height: 1.4),
                             ),
                           ),
                         ],
